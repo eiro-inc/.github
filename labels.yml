@@ -1,0 +1,110 @@
+# GitHub Labels for Eiro Inc. QMS
+# Apply using: gh label create "name" --description "description" --color "color"
+# Or use a tool like github-label-sync
+
+# Issue Types
+- name: requirement
+  color: "0052CC"
+  description: "Software requirement for traceability"
+
+- name: bug
+  color: "D73A4A"
+  description: "Software defect or anomaly"
+
+- name: enhancement
+  color: "A2EEEF"
+  description: "New feature or enhancement request"
+
+- name: design-change
+  color: "7057FF"
+  description: "Design change request per SOP-002"
+
+- name: documentation
+  color: "0075CA"
+  description: "Documentation improvements"
+
+# Safety Classification
+- name: safety-critical
+  color: "B60205"
+  description: "Safety-critical functionality (Class B/C)"
+
+- name: safety-related
+  color: "FBCA04"
+  description: "Safety-related but not critical"
+
+# Component Labels
+- name: AI/ML
+  color: "5319E7"
+  description: "Related to AI/ML algorithm or model"
+
+- name: api
+  color: "BFD4F2"
+  description: "API-related"
+
+- name: ui
+  color: "BFD4F2"
+  description: "User interface related"
+
+- name: infrastructure
+  color: "BFD4F2"
+  description: "Infrastructure or deployment"
+
+- name: security
+  color: "D93F0B"
+  description: "Security-related"
+
+# Priority
+- name: "priority: critical"
+  color: "B60205"
+  description: "Critical priority - immediate attention"
+
+- name: "priority: high"
+  color: "D93F0B"
+  description: "High priority"
+
+- name: "priority: medium"
+  color: "FBCA04"
+  description: "Medium priority"
+
+- name: "priority: low"
+  color: "0E8A16"
+  description: "Low priority"
+
+# Status
+- name: "status: in-progress"
+  color: "FBCA04"
+  description: "Currently being worked on"
+
+- name: "status: blocked"
+  color: "D73A4A"
+  description: "Blocked by external dependency"
+
+- name: "status: needs-review"
+  color: "7057FF"
+  description: "Ready for review"
+
+- name: "status: verified"
+  color: "0E8A16"
+  description: "Verified/tested"
+
+# Regulatory
+- name: regulatory-impact
+  color: "C2E0C6"
+  description: "May have regulatory implications"
+
+- name: CAPA
+  color: "F9D0C4"
+  description: "Related to CAPA"
+
+- name: complaint
+  color: "E99695"
+  description: "Related to customer complaint"
+
+# Verification
+- name: needs-test
+  color: "C5DEF5"
+  description: "Requires test case"
+
+- name: test-case
+  color: "C5DEF5"
+  description: "This issue is a test case"

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: QMS Documentation
+    url: https://github.com/eiro-inc/[repo-name]/wiki
+    about: Review QMS procedures and documentation
+  - name: Support Email
+    url: mailto:support@eiro.ai
+    about: For customer complaints or urgent issues, email support@eiro.ai

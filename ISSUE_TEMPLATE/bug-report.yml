@@ -1,0 +1,113 @@
+name: Bug Report
+description: Report a software defect or anomaly (links to SOP-004 SPR process)
+title: "[BUG] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Bug Report / Software Problem Report
+        Use this template to report software defects per SOP-004.
+        Critical and High severity bugs require formal SPR documentation.
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: |
+        - Critical: Affects patient safety or data integrity; immediate fix required
+        - High: Significant functionality loss; fix in next release
+        - Medium: Non-critical issue; defer to planned release
+        - Low: Cosmetic or minor usability issue
+      options:
+        - Critical
+        - High
+        - Medium
+        - Low
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version Affected
+      description: Which version(s) exhibit this bug?
+      placeholder: "v1.0.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: Clear description of the problem
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Detailed steps to reproduce the issue
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Enter '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: What should happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual Behavior
+      description: What actually happens?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: safety-impact
+    attributes:
+      label: Patient Safety Impact
+      description: Could this bug affect patient safety?
+      options:
+        - "No - No safety impact"
+        - "Potential - Needs investigation"
+        - "Yes - Safety impact identified"
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser, OS, device, or other relevant environment details
+      placeholder: |
+        - Browser: Chrome 120
+        - OS: macOS 14
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Screenshots
+      description: Any relevant error messages, logs, or screenshots
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: spr-required
+    attributes:
+      label: SPR Documentation
+      description: For Critical/High bugs, formal SPR is required per SOP-004
+      options:
+        - label: "Formal SPR (SOP-004-ATTACH-C) is required for this issue"

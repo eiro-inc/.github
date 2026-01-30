@@ -1,0 +1,111 @@
+name: Design Change Request
+description: Request a change to an approved design (per SOP-002 Section 5.8)
+title: "[DCR] "
+labels: ["design-change"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Design Change Request
+        Use this template to initiate design changes per SOP-002.
+        All design changes require impact assessment and appropriate approval.
+
+  - type: input
+    id: affected-component
+    attributes:
+      label: Affected Component(s)
+      description: Which software component(s) or module(s) will be changed?
+      placeholder: "e.g., Prediction Engine, User Interface, API"
+    validations:
+      required: true
+
+  - type: textarea
+    id: change-description
+    attributes:
+      label: Description of Proposed Change
+      description: Clearly describe what change is being requested and why
+    validations:
+      required: true
+
+  - type: dropdown
+    id: change-reason
+    attributes:
+      label: Reason for Change
+      options:
+        - Defect/Bug Fix
+        - User Feedback
+        - New/Changed Requirement
+        - Regulatory Requirement
+        - Product Enhancement
+        - CAPA
+        - Algorithm Update (AI/ML)
+        - Security Vulnerability
+        - Performance Improvement
+    validations:
+      required: true
+
+  - type: textarea
+    id: requirements-impact
+    attributes:
+      label: Impact on Requirements
+      description: Which requirements are affected? Are new requirements needed?
+      placeholder: "Affects REQ-XXX, REQ-YYY. No new requirements needed."
+    validations:
+      required: true
+
+  - type: textarea
+    id: risk-impact
+    attributes:
+      label: Impact on Risk Analysis
+      description: Does this change introduce new hazards or affect existing risk controls?
+      placeholder: "No new hazards identified. / New hazard identified: ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: verification-impact
+    attributes:
+      label: Verification/Validation Impact
+      description: What testing is required? Does this require re-validation?
+      placeholder: |
+        - Unit tests required
+        - Integration testing required
+        - System testing required
+        - Re-validation: Yes/No
+    validations:
+      required: true
+
+  - type: dropdown
+    id: regulatory-impact
+    attributes:
+      label: Regulatory Impact
+      description: Does this change affect regulatory status?
+      options:
+        - "No regulatory impact"
+        - "Documentation update only"
+        - "May require FDA notification"
+        - "Requires regulatory review"
+        - "Within PCCP scope (for AI/ML)"
+        - "Outside PCCP scope - may require new submission"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: change-significance
+    attributes:
+      label: Change Significance
+      description: Per SOP-002 Section 5.8.3
+      options:
+        - "Minor - Project Lead approval"
+        - "Significant - Project Lead + Quality Rep approval"
+        - "Major - Requires design review"
+    validations:
+      required: true
+
+  - type: textarea
+    id: implementation-plan
+    attributes:
+      label: Implementation Plan
+      description: High-level plan for implementing this change
+    validations:
+      required: false
