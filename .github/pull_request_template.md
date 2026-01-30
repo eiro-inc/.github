@@ -34,6 +34,7 @@ Closes #
 - [ ] No security vulnerabilities introduced
 - [ ] Sensitive data is properly protected
 - [ ] No credentials or secrets in code
+- [ ] Dependencies are approved SOUP
 
 ### Testing
 - [ ] Unit tests added/updated
