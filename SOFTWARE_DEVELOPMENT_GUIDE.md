@@ -1,6 +1,6 @@
 # Software Development Lifecycle Guide
 
-> **Official Document**: This guide summarizes [SOP-004: Software Development Lifecycle](https://drive.google.com/drive/folders/YOUR_QMS_FOLDER) maintained in the Eiro QMS on Google Drive. For audit purposes, always reference the controlled `.docx` version.
+> **Official Document**: This guide summarizes [SOP-004: Software Development Lifecycle](https://docs.google.com/document/d/1w88x2JGCiB1yKPQktt_v_Q4KYuN7OI6ND7CXAL_cH9E/edit?usp=share_link) maintained in the Eiro QMS on Google Drive. 
 
 ## Overview
 
@@ -48,12 +48,31 @@ This guide establishes software development lifecycle (SDLC) processes for Eiro 
 
 | Label | Purpose |
 |-------|---------|
-| `requirement` | Software requirement |
-| `bug` | Defect found in testing or field |
-| `critical-defect` | Critical defect needing immediate fix |
-| `safety-critical` | Affects patient safety |
-| `AI/ML` | AI/ML related changes |
-| `problem-report` | Field anomaly reported via SPR |
+| `requirement` | Software requirement for traceability |
+| `bug` | Software defect or anomaly |
+| `enhancement` | New feature or enhancement request |
+| `design-change` | Design change request per SOP-002 |
+| `documentation` | Documentation improvements |
+| `safety-critical` | Safety-critical functionality (Class B/C) |
+| `safety-related` | Safety-related but not critical |
+| `AI/ML` | Related to AI/ML algorithm or model |
+| `api` | API-related |
+| `ui` | User interface related |
+| `infrastructure` | Infrastructure or deployment |
+| `security` | Security-related |
+| `priority: critical` | Critical priority - immediate attention |
+| `priority: high` | High priority |
+| `priority: medium` | Medium priority |
+| `priority: low` | Low priority |
+| `status: in-progress` | Currently being worked on |
+| `status: blocked` | Blocked by external dependency |
+| `status: needs-review` | Ready for review |
+| `status: verified` | Verified/tested |
+| `regulatory-impact` | May have regulatory implications |
+| `CAPA` | Related to CAPA |
+| `complaint` | Related to customer complaint |
+| `needs-test` | Requires test case |
+| `test-case` | This issue is a test case |
 
 ### Pull Request Workflow
 
@@ -76,10 +95,10 @@ This guide establishes software development lifecycle (SDLC) processes for Eiro 
 When reviewing PRs, verify:
 
 **Code Quality**
-- [ ] Code follows project coding standards
-- [ ] No unnecessary complexity
-- [ ] Appropriate error handling
+- [ ] Code follows coding standards
+- [ ] Code is readable and well-commented
 - [ ] No hardcoded values that should be configurable
+- [ ] Error handling is appropriate
 
 **Functionality**
 - [ ] Implements requirements correctly
@@ -92,16 +111,20 @@ When reviewing PRs, verify:
 - [ ] Safety-critical paths have 100% coverage
 
 **Documentation & Traceability**
-- [ ] PR links to GitHub Issue
-- [ ] Comments explain non-obvious logic
-- [ ] API changes documented
+- [ ] Code comments updated
+- [ ] README updated if needed
+- [ ] API documentation updated if applicable
+- [ ] Linked to requirement issue(s)
+- [ ] Traceability matrix updated
 
 **Security**
-- [ ] No sensitive data exposed
-- [ ] Input validation present
+- [ ] Input validation implemented
+- [ ] No security vulnerabilities introduced
+- [ ] Sensitive data is properly protected
+- [ ] No credentials or secrets in code
 - [ ] Dependencies are approved SOUP
 
-For the full checklist, use [SOP-004-ATTACH-B: Code Review Checklist](https://drive.google.com/drive/folders/YOUR_QMS_FOLDER) from the QMS.
+For the full checklist, use [SOP-004-ATTACH-B: Code Review Checklist](https://docs.google.com/document/d/1qOGFuCIJjEgwZXuhCO9eBs7Mo8bEjU-N/edit?usp=sharing&ouid=113643867523021784204&rtpof=true&sd=true) from the QMS.
 
 ---
 
