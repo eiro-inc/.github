@@ -32,9 +32,9 @@ body:
     attributes:
       label: Version Affected
       description: Which version(s) exhibit this bug?
-      placeholder: "v1.0.0"
+      placeholder: "e.g. v1.0.0"
     validations:
-      required: true
+      required: false
 
   - type: textarea
     id: description

@@ -1,7 +1,7 @@
-blank_issues_enabled: false
+blank_issues_enabled: true
 contact_links:
   - name: QMS Documentation
-    url: https://github.com/eiro-inc/[repo-name]/wiki
+    url: https://drive.google.com/drive/folders/1Eu9d3qyJhFKQLRetTt92gkcDrTb7kjwo?usp=share_link
     about: Review QMS procedures and documentation
   - name: Support Email
     url: mailto:support@eiro.ai
