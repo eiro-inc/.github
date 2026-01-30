@@ -40,7 +40,7 @@ gh label create "CAPA" --description "Related to CAPA" --color "F9D0C4"
 gh label create "needs-test" --description "Requires test case" --color "C5DEF5"
 ```
 
-### 4. Configure Branch Protection (Recommended)
+### 4. Configure Branch Protection
 
 In GitHub repository settings (Settings → Branches → Add rule):
 
