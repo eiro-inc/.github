@@ -1,0 +1,92 @@
+name: Thorne pre-design scaffolding
+description: Controlled infrastructure/scaffolding work before UNS/SRS/SDD/HAZ/TRM approval
+title: "[Thorne scaffolding] "
+labels: ["thorne", "pre-design-scaffolding"]
+projects: ["eiro-inc/16"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form only for CMP §7 pre-design scaffolding. This issue must not request clinical device behavior.
+
+  - type: dropdown
+    id: repository
+    attributes:
+      label: Repository / workstream
+      options:
+        - thorne-core
+        - thorne-backend
+        - thorne-clinician-web
+        - thorne-patient-ios
+        - thorne-patient-android
+        - thorne-patient-web
+        - thorne-dhf
+        - thorne-product
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scaffolding-category
+    attributes:
+      label: CMP §7 scaffolding category
+      options:
+        - Repository creation and administrative setup
+        - Build and test infrastructure
+        - Deployment scaffolding
+        - Authentication and authorization scaffolding
+        - Audit logging scaffolding
+        - Data model scaffolding
+        - API skeletons
+        - Instrument-rule harnesses
+        - Cybersecurity tooling
+    validations:
+      required: true
+
+  - type: input
+    id: dhf-trace
+    attributes:
+      label: DHF trace anchor
+      description: Cite CMP §7 and any relevant DDS section.
+      placeholder: "CMP §7; DDS §5"
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Work scope
+      description: Describe the scaffolding work and the files/modules expected to change.
+    validations:
+      required: true
+
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification plan
+      description: State how this scaffolding will be checked.
+      placeholder: "CI build, lint, unit-test harness smoke test, PR review"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: forbidden-behavior
+    attributes:
+      label: Forbidden behavior check
+      options:
+        - label: This work does not implement validated-instrument scoring behavior.
+          required: true
+        - label: This work does not implement severity bands, thresholds, or change-status behavior.
+          required: true
+        - label: This work does not implement salience, priority, ranking, patient status, or reassurance logic.
+          required: true
+        - label: This work does not implement Eiro-authored safety detection, safety flagging, triage, crisis prediction, urgent notification, or treatment recommendation.
+          required: true
+        - label: This work is not a production or clinical-use release.
+          required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes / blockers
+    validations:
+      required: false

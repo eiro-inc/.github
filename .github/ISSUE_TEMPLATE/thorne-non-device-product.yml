@@ -1,0 +1,73 @@
+name: Thorne non-device product work
+description: Non-device product design or implementation that must respect the DDS membrane
+title: "[Thorne product] "
+labels: ["thorne", "non-device"]
+projects: ["eiro-inc/16"]
+body:
+  - type: dropdown
+    id: repository
+    attributes:
+      label: Repository / workstream
+      options:
+        - thorne-product
+        - thorne-backend
+        - thorne-clinician-web
+        - thorne-patient-ios
+        - thorne-patient-android
+        - thorne-patient-web
+    validations:
+      required: true
+
+  - type: dropdown
+    id: non-device-function
+    attributes:
+      label: Non-device function category
+      options:
+        - Account / identity / onboarding
+        - Clinic administration
+        - Billing / RTM export
+        - Patient engagement
+        - Patient own-data view
+        - Condition-specific education
+        - Product copy / content
+        - Other non-device function
+    validations:
+      required: true
+
+  - type: input
+    id: dhf-trace
+    attributes:
+      label: Boundary trace anchor
+      description: Cite DDS §6, DDS §7, ADR-0002, or CMP §11 as applicable.
+      placeholder: "DDS §6; DDS §7; CMP §11"
+    validations:
+      required: true
+
+  - type: textarea
+    id: product-scope
+    attributes:
+      label: Product work scope
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact-assessment
+    attributes:
+      label: Device impact assessment
+      description: Explain why this does not adversely affect device safety or effectiveness.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: membrane-check
+    attributes:
+      label: Membrane check
+      options:
+        - label: This work does not implement validated-instrument scoring, published bands, thresholds, or change-status logic.
+          required: true
+        - label: This work does not change the meaning, priority, salience, or safety significance of device output.
+          required: true
+        - label: This work does not implement Eiro-authored safety detection, safety flagging, triage, patient-status assignment, or treatment recommendation.
+          required: true
+        - label: If any statement above cannot be checked, this issue must be treated as a Multiple-Function impact / DHF escalation instead.
+          required: true
