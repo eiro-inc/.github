@@ -1,61 +1,54 @@
-## Description
-<!-- Briefly describe what this PR does -->
+## Summary
 
-## Related Issues
-<!-- Link to related GitHub issues using "Closes #123" or "Relates to #456" -->
-Closes #
+<!-- Briefly describe the change. -->
 
-## Type of Change
-<!-- Check all that apply -->
-- [ ] Bug fix (non-breaking change that fixes an issue)
-- [ ] New feature (non-breaking change that adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to change)
-- [ ] Documentation update
-- [ ] Refactoring (no functional changes)
-- [ ] Configuration change
+## Related Issue
 
-## Safety Impact
-<!-- Per SOP-004, identify safety impact -->
-- [ ] No safety impact
-- [ ] Safety-related code - requires additional review
-- [ ] Safety-critical code - requires Quality Representative review
+<!-- Link the repository issue. Example: Closes #123 -->
 
-## Checklist
-<!-- Complete before requesting review -->
+## Thorne Scope
 
-### Code Quality
-- [ ] Code follows coding standards
-- [ ] Code is readable and well-commented
-- [ ] No hardcoded values that should be configurable
-- [ ] Error handling is appropriate
+- [ ] Device function
+- [ ] Non-device function
+- [ ] Multiple-Function impact assessment
+- [ ] Pre-design scaffolding under CMP §7
+- [ ] DHF/QMS artifact
+- [ ] Not Thorne-related
 
-### Security (per SOP-011)
-- [ ] Input validation implemented
-- [ ] No security vulnerabilities introduced
-- [ ] Sensitive data is properly protected
-- [ ] No credentials or secrets in code
-- [ ] Dependencies are approved SOUP
+## DHF Trace
 
-### Testing
-- [ ] Unit tests added/updated
-- [ ] All tests pass locally
-- [ ] Code coverage maintained (≥80% for Class B)
-- [ ] Integration tests added if needed
+<!-- Cite controlling anchors: CMP §7, DDS §5/§6/§7, UNS, SRS, SDD, HAZ, TRM, DR, etc. -->
 
-### Documentation
-- [ ] Code comments updated
-- [ ] README updated if needed
-- [ ] API documentation updated if applicable
+## Safety Class
 
-### Traceability
-- [ ] Linked to requirement issue(s)
-- [ ] Traceability matrix will be updated
+- [ ] Class A
+- [ ] Class B
+- [ ] Class C
+- [ ] C-adjacent integrity control
+- [ ] N/A
+- [ ] TBD / blocked until resolved
 
-## Test Plan
-<!-- How was this tested? -->
+## Verification
 
-## Screenshots (if applicable)
-<!-- Add screenshots for UI changes -->
+<!-- State what was checked and where evidence lives. -->
 
-## Notes for Reviewers
-<!-- Any specific areas to focus on during review -->
+- [ ] Build/typecheck
+- [ ] Unit tests
+- [ ] Integration tests
+- [ ] Static analysis / lint
+- [ ] Dependency or SBOM impact reviewed
+- [ ] Secret scan / cybersecurity impact reviewed
+- [ ] DHF document review only
+- [ ] Other:
+
+## Thorne Boundary Check
+
+- [ ] This PR does not introduce Eiro-authored clinical interpretation.
+- [ ] This PR does not introduce safety detection, safety flagging, triage, crisis prediction, priority ranking, patient-status assignment, or treatment recommendation.
+- [ ] This PR does not introduce PHQ-9 item 9 default alerting, urgent notification, 24-hour, push, or on-call alert behavior.
+- [ ] This PR does not change the meaning, priority, salience, or safety significance of device output from a non-device surface.
+- [ ] If this is pre-design scaffolding, it stays within CMP §7 and does not implement clinical device behavior.
+
+## Reviewer Notes
+
+<!-- Call out risk, traceability gaps, follow-up DHF updates, or known limitations. -->

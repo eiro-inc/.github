@@ -1,8 +1,8 @@
-blank_issues_enabled: true
+blank_issues_enabled: false
 contact_links:
-  - name: QMS Documentation
-    url: https://drive.google.com/drive/folders/1Eu9d3qyJhFKQLRetTt92gkcDrTb7kjwo?usp=share_link
-    about: Review QMS procedures and documentation
-  - name: Support Email
-    url: mailto:support@eiro.ai
-    about: For customer complaints or urgent issues, email support@eiro.ai
+  - name: Thorne v1 Design & Build project
+    url: https://github.com/orgs/eiro-inc/projects/16
+    about: Use the Thorne project for cross-repository planning and field tracking.
+  - name: Eiro QMS
+    url: https://github.com/eiro-inc/eiro-qms
+    about: QMS procedures and forms are maintained in eiro-qms.

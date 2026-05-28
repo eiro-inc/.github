@@ -1,0 +1,87 @@
+name: Thorne device implementation
+description: Device-function work after traceable UNS/SRS/SDD/HAZ/TRM coverage exists
+title: "[Thorne device] "
+labels: ["thorne", "device"]
+projects: ["eiro-inc/16"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form only when the requested device behavior has approved traceability. Before that, use the pre-design scaffolding form.
+
+  - type: dropdown
+    id: repository
+    attributes:
+      label: Repository / workstream
+      options:
+        - thorne-core
+        - thorne-backend
+        - thorne-clinician-web
+        - thorne-patient-ios
+        - thorne-patient-android
+        - thorne-patient-web
+    validations:
+      required: true
+
+  - type: textarea
+    id: traceability
+    attributes:
+      label: Required traceability
+      description: Cite all applicable approved records.
+      placeholder: |
+        UNS-...
+        SRS-...
+        SDD-...
+        HAZ-...
+        TRM row...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: safety-class
+    attributes:
+      label: Software safety class
+      options:
+        - Class A
+        - Class B
+        - Class C
+        - C-adjacent integrity control
+        - TBD - do not start until resolved
+    validations:
+      required: true
+
+  - type: textarea
+    id: implementation
+    attributes:
+      label: Implementation scope
+      description: Describe the device function, module, interface, or risk control to implement.
+    validations:
+      required: true
+
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification evidence
+      description: Identify expected unit, integration, system, cybersecurity, or usability evidence.
+    validations:
+      required: true
+
+  - type: textarea
+    id: risk-impact
+    attributes:
+      label: Risk and cybersecurity impact
+      description: Describe risk-control, hazard, SOUP, SBOM, and cybersecurity implications.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: boundary-check
+    attributes:
+      label: Boundary check
+      options:
+        - label: This work stays within DDS §5 device functions or has an approved design-change basis.
+          required: true
+        - label: This work does not introduce Eiro-authored clinical interpretation, safety detection, triage, priority ranking, or treatment recommendation.
+          required: true
+        - label: This work will update or confirm TRM coverage before V&V.
+          required: true

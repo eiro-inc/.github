@@ -1,0 +1,83 @@
+name: Thorne DHF artifact
+description: DHF document, review, risk, traceability, or V&V work
+title: "[Thorne DHF] "
+labels: ["thorne", "dhf"]
+projects: ["eiro-inc/16"]
+body:
+  - type: dropdown
+    id: artifact-type
+    attributes:
+      label: Artifact type
+      options:
+        - DDS / device boundary
+        - DDP / planning
+        - CMP / configuration management
+        - ADR / architecture decision
+        - DR / design review
+        - RMP / risk management plan
+        - HAZ / hazard analysis
+        - UNS / user needs
+        - SRS / software requirements
+        - SDD / software design
+        - TRM / traceability matrix
+        - VVP / V&V plan
+        - VVR / V&V report
+        - Other DHF artifact
+    validations:
+      required: true
+
+  - type: input
+    id: document-id
+    attributes:
+      label: Document ID or planned ID
+      placeholder: "RMP, TRM, DR-0001, SRS-..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Design phase
+      options:
+        - P1 Planning
+        - P2 Inputs
+        - P3 Outputs
+        - P4 Implementation
+        - P5 V&V
+        - P6 Transfer
+        - Post-transfer
+    validations:
+      required: true
+
+  - type: textarea
+    id: source-inputs
+    attributes:
+      label: Source inputs
+      description: Cite authoritative inputs and dependencies.
+      placeholder: "DDS §5; DDP §5; CMP §7; SOP-003 §9"
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Artifact scope
+      description: Describe what the artifact must cover and what is out of scope.
+    validations:
+      required: true
+
+  - type: textarea
+    id: traceability
+    attributes:
+      label: Traceability impact
+      description: State whether this creates, updates, or depends on TRM rows or cross-references.
+    validations:
+      required: true
+
+  - type: textarea
+    id: review
+    attributes:
+      label: Review / approval dependency
+      description: Identify prerequisite PRs, reviewers, or design-review gates.
+    validations:
+      required: true
