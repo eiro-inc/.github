@@ -1,0 +1,11 @@
+name: Thorne PR Boundary Check
+description: Validate Thorne pull-request template boundary declarations (scope, DHF trace, safety class, boundary confirmations).
+
+runs:
+  using: composite
+  steps:
+    - name: Validate PR template sections
+      shell: bash
+      env:
+        PR_BODY: ${{ github.event.pull_request.body }}
+      run: python3 "${GITHUB_ACTION_PATH}/thorne_pr_boundary_check.py"
