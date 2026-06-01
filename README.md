@@ -14,13 +14,13 @@ The organization-level pull request template includes Thorne-specific sections f
 
 Repositories inherit this template unless they define a repository-local `.github/pull_request_template.md`.
 
-## Reusable Workflows
+## Composite Actions
 
 ### Thorne PR Boundary Check
 
-`.github/workflows/thorne-pr-boundary-check.yml` validates that a pull request using the organization template has completed the Thorne-specific sections. The first version checks PR-body declarations only; repository-specific static import-boundary checks remain local to each source-code repository.
+`.github/actions/thorne-pr-boundary-check` validates that a pull request using the organization template has completed the Thorne-specific sections. Its validator (`thorne_pr_boundary_check.py`) is an importable module with unit tests (run by `test-thorne-boundary-check.yml`). The action checks PR-body declarations only; repository-specific static import-boundary checks remain local to each source-code repository.
 
-To use it in a repository, add this caller workflow:
+To use it in a repository, add this workflow:
 
 ```yaml
 name: Thorne PR Boundary Check
@@ -29,12 +29,20 @@ on:
   pull_request:
     types: [opened, edited, synchronize, reopened, ready_for_review]
 
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
   thorne-pr-boundary-check:
-    uses: eiro-inc/.github/.github/workflows/thorne-pr-boundary-check.yml@main
+    runs-on: ubuntu-latest
+    steps:
+      - uses: eiro-inc/.github/.github/actions/thorne-pr-boundary-check@main
 ```
 
-After adding the caller workflow, configure the repository's branch protection or organization ruleset to require the `Validate Thorne PR boundary declarations` status check before merge.
+After adding the workflow, configure the repository's branch protection or organization ruleset to require the `thorne-pr-boundary-check` status check before merge.
+
+**Pinning.** The example pins `@main`, which is convenient for everyday repositories (fixes propagate without per-repo PRs) but means the check semantics can change under a PR. Repositories that need reproducibility — for example a DHF repository preparing a regulatory submission — should pin to a release tag (e.g., `@v1`) once tags are cut, so a submission-gating PR is validated against a known-good state rather than whatever is on `main`.
 
 The workflow enforces:
 

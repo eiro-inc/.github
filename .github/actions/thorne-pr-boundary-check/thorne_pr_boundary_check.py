@@ -133,6 +133,9 @@ def substantive_text(section_text):
 def validate(body):
     """Return a list of declaration errors for the given PR body."""
     body = body or ""
+    if not body.strip():
+        # Short-circuit: one actionable error instead of one-per-section noise.
+        return ["PR body is empty. Use the organization Thorne PR template."]
     parsed = sections(body)
     errors = []
 

@@ -36,6 +36,12 @@ def make_body(
     )
 
 
+def test_empty_body_returns_single_error():
+    for body in ("", "   \n\t  ", None):
+        errs = validate(body)
+        assert errs == ["PR body is empty. Use the organization Thorne PR template."]
+
+
 def test_valid_device_pr_passes():
     body = make_body(["Device function"], ["Class B"], MANDATORY_BOUNDARY_ITEMS, "DDS §5; SRS-02-04")
     assert validate(body) == []
