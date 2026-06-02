@@ -1,57 +1,63 @@
 # GitHub Templates for Eiro Inc. QMS
 
-These templates integrate GitHub with the Eiro Inc. Quality Management System per SOP-004 (Software Development Lifecycle).
+This repository provides organization-default GitHub templates and reusable workflows for Eiro Inc. repositories.
 
-## Template Descriptions
+## Thorne Pull Request Template
 
-### Issue Templates
+The organization-level pull request template includes Thorne-specific sections for:
 
-| Template | Purpose | SOP Reference |
-|----------|---------|---------------|
-| **Software Requirement** | Document traceable requirements | SOP-004 §5.3 |
-| **Design Change Request** | Request changes to approved design | SOP-002 §5.8 |
-| **Bug Report** | Report software defects | SOP-004 §5.10 |
-| **Feature Request** | Suggest new features | - |
+- Thorne scope classification.
+- DHF trace anchors.
+- Safety class declaration.
+- Verification evidence.
+- Boundary confirmations for the device/non-device membrane.
 
-### Pull Request Template
+Repositories inherit this template unless they define a repository-local `.github/pull_request_template.md`.
 
-The PR template includes checklists for:
-- Code quality per coding standards
-- Security per SOP-011
-- Testing per SOP-004
-- Traceability to requirements
+## Composite Actions
 
-## Usage in QMS Workflow
+### Thorne PR Boundary Check
 
-### Creating Requirements
-1. Create a new issue using "Software Requirement" template
-2. GitHub issue number becomes the requirement ID (e.g., REQ-#42)
-3. Link to User Need from DHF-001-001
-4. Update Traceability Matrix when requirement is approved
+`.github/actions/thorne-pr-boundary-check` validates that a pull request using the organization template has completed the Thorne-specific sections. Its validator (`thorne_pr_boundary_check.py`) is an importable module with unit tests (run by `test-thorne-boundary-check.yml`). The action checks PR-body declarations only; repository-specific static import-boundary checks remain local to each source-code repository.
 
-### Tracking Design Changes
-1. Create issue using "Design Change Request" template
-2. Complete impact assessment fields
-3. Obtain required approvals (comments or PR approval)
-4. Link to implementing PR(s)
+To use it in a repository, add this workflow:
 
-### Reporting Bugs
-1. Create issue using "Bug Report" template
-2. For Critical/High severity: also complete formal SPR form (SOP-004-ATTACH-C)
-3. Link fix PR to bug issue using "Closes #XX"
+```yaml
+name: Thorne PR Boundary Check
 
-### Code Review
-1. Create PR using the PR template
-2. Link to requirement/bug issue
-3. Complete checklist
-4. For safety-critical code: request Quality Representative review
-5. Use Code Review Checklist (SOP-004-ATTACH-B) for formal reviews
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review]
 
-## Traceability
+permissions:
+  contents: read
+  pull-requests: read
 
-GitHub provides automatic traceability through:
-- Issue linking (`Closes #123`, `Relates to #456`)
-- PR to issue linking
-- Commit messages referencing issues (`Fixes #123`)
+jobs:
+  thorne-pr-boundary-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: eiro-inc/.github/.github/actions/thorne-pr-boundary-check@main
+```
 
-Export this data periodically to update the formal Traceability Matrix in the DHF.
+After adding the workflow, configure the repository's branch protection or organization ruleset to require the `thorne-pr-boundary-check` status check before merge.
+
+**Pinning.** The example pins `@main`, which is convenient for everyday repositories (fixes propagate without per-repo PRs) but means the check semantics can change under a PR. Repositories that need reproducibility — for example a DHF repository preparing a regulatory submission — should pin to a release tag (e.g., `@v1`) once tags are cut, so a submission-gating PR is validated against a known-good state rather than whatever is on `main`.
+
+The workflow enforces:
+
+- Required Thorne template sections are present.
+- At least one Thorne Scope item is checked.
+- `Not Thorne-related` is not combined with Thorne-specific scope items.
+- DHF Trace text is non-placeholder when the PR touches device function, Multiple-Function impact assessment, pre-design scaffolding, or DHF/QMS artifacts.
+- Device-function PRs select at least one Safety Class item other than `N/A`.
+- Thorne-related PRs confirm the required boundary checklist items.
+
+## Issue Templates
+
+The issue templates currently focus on Thorne traceability:
+
+- Thorne device implementation.
+- Thorne DHF artifact.
+- Thorne non-device product work.
+- Thorne pre-design scaffolding.

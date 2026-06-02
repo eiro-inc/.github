@@ -1,0 +1,24 @@
+name: Test Thorne PR Boundary Check
+
+on:
+  pull_request:
+    paths:
+      - ".github/actions/thorne-pr-boundary-check/**"
+      - ".github/workflows/test-thorne-boundary-check.yml"
+  push:
+    branches: [main]
+    paths:
+      - ".github/actions/thorne-pr-boundary-check/**"
+
+jobs:
+  pytest:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pytest
+      - run: pytest -q
+        working-directory: .github/actions/thorne-pr-boundary-check
