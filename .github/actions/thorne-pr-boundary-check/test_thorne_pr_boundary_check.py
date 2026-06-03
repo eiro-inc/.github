@@ -5,6 +5,7 @@ from thorne_pr_boundary_check import (
     MANDATORY_BOUNDARY_ITEMS,
     SAFETY_CLASS_ITEMS,
     THORNE_SCOPE_ITEMS,
+    determine_lane,
     device_paths,
     glob_match,
     parse_non_device_globs,
@@ -194,8 +195,22 @@ def test_device_if_any_file_is_not_carved_out():
     ]
 
 
-def test_no_changed_files_is_light():
+def test_no_changed_files_has_no_device_paths():
     assert device_paths([], ["docs/**"]) == []
+
+
+def test_determine_lane_fails_safe_when_no_changed_files(monkeypatch):
+    monkeypatch.setenv("REPO", "eiro-inc/thorne-core")
+    monkeypatch.setenv("PR_NUMBER", "1")
+    monkeypatch.setenv("BASE_REF", "main")
+    monkeypatch.setattr("thorne_pr_boundary_check.fetch_changed_files", lambda repo, pr: [])
+    monkeypatch.setattr("thorne_pr_boundary_check.fetch_non_device_globs", lambda repo, ref: ["docs/**"])
+
+    lane, triggering, note = determine_lane()
+
+    assert lane == "device"
+    assert triggering == []
+    assert "No changed files reported" in note
 
 
 # --- Light-lane validation ---

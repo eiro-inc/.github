@@ -382,7 +382,7 @@ def determine_lane():
         return "device", [], f"Could not determine lane from changed paths ({exc}); defaulting to the device (full) path."
 
     if not changed:
-        return "non_device", [], "No changed files reported; treating as non-device (light) path."
+        return "device", [], "No changed files reported; defaulting to the device (full) path."
     triggering = device_paths(changed, globs)
     if triggering:
         return "device", triggering, ""
