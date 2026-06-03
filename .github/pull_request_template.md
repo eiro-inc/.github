@@ -1,10 +1,26 @@
 ## Summary
 
-<!-- Briefly describe the change. -->
+<!-- What changed and why. This is all a non-device PR needs. -->
 
 ## Related Issue
 
-<!-- Link the repository issue. Example: Closes #123 -->
+<!-- Link the repository issue (e.g. Closes #123), or write N/A. -->
+
+<!--
+──────────────────────────────────────────────────────────────────────────
+DEVICE-LANE SECTION ↓  — only required if this PR touches device code.
+
+The `thorne-pr-boundary-check` decides the lane automatically from the files
+you changed: everything is device unless carved out in `.github/thorne-lanes.yml`.
+
+• Non-device PR? Leave the block below as-is (or delete it) and you're done.
+• Device PR? The check fails until the block is filled in — and it lists the
+  exact files that put you on the device lane.
+──────────────────────────────────────────────────────────────────────────
+-->
+
+<details>
+<summary><b>Device-lane details</b> — fill in only for device-code changes</summary>
 
 ## Thorne Scope
 
@@ -52,3 +68,5 @@
 ## Reviewer Notes
 
 <!-- Call out risk, traceability gaps, follow-up DHF updates, or known limitations. -->
+
+</details>
