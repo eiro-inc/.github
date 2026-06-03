@@ -5,7 +5,11 @@ from thorne_pr_boundary_check import (
     MANDATORY_BOUNDARY_ITEMS,
     SAFETY_CLASS_ITEMS,
     THORNE_SCOPE_ITEMS,
+    device_paths,
+    glob_match,
+    parse_non_device_globs,
     validate,
+    validate_light,
 )
 
 
@@ -127,3 +131,76 @@ def test_not_thorne_combined_with_device_fails():
         "DDS §5",
     )
     assert any("Not Thorne-related" in e for e in validate(body))
+
+
+# --- Lane detection: parsing thorne-lanes.yml ---
+
+def test_parse_non_device_globs_block_list():
+    yml = (
+        "# header comment\n"
+        "non_device:\n"
+        '  - "docs/**"\n'
+        "  - src/ui/**   # trailing comment\n"
+    )
+    assert parse_non_device_globs(yml) == ["docs/**", "src/ui/**"]
+
+
+def test_parse_non_device_globs_absent_or_empty_means_no_carveouts():
+    assert parse_non_device_globs("") == []
+    assert parse_non_device_globs(None) == []
+    assert parse_non_device_globs("non_device: []\n") == []
+    assert parse_non_device_globs("some_other_key:\n  - x\n") == []
+
+
+def test_parse_non_device_globs_stops_at_next_top_level_key():
+    yml = "non_device:\n  - docs/**\nother:\n  - not-a-glob\n"
+    assert parse_non_device_globs(yml) == ["docs/**"]
+
+
+# --- Lane detection: glob matching ---
+
+def test_glob_double_star_matches_any_depth():
+    assert glob_match("docs/a/b.md", "docs/**")
+    assert glob_match("docs/x.md", "docs/**")
+    assert not glob_match("src/docs.md", "docs/**")
+
+
+def test_glob_single_star_is_segment_scoped():
+    assert glob_match("src/a.ts", "src/*.ts")
+    assert not glob_match("src/a/b.ts", "src/*.ts")
+
+
+def test_glob_bare_path_is_treated_as_prefix():
+    assert glob_match("src/ui/x.tsx", "src/ui")
+    assert glob_match("src/ui", "src/ui")
+    assert not glob_match("src/uikit/x", "src/ui")
+
+
+# --- Lane detection: device-by-default decision ---
+
+def test_device_by_default_when_no_carveouts():
+    assert device_paths(["crates/scoring/lib.rs"], []) == ["crates/scoring/lib.rs"]
+
+
+def test_light_when_every_file_is_carved_out():
+    globs = ["docs/**", "src/ui/**"]
+    assert device_paths(["docs/x.md", "src/ui/a.tsx"], globs) == []
+
+
+def test_device_if_any_file_is_not_carved_out():
+    globs = ["docs/**"]
+    assert device_paths(["docs/x.md", "crates/scoring/lib.rs"], globs) == [
+        "crates/scoring/lib.rs"
+    ]
+
+
+def test_no_changed_files_is_light():
+    assert device_paths([], ["docs/**"]) == []
+
+
+# --- Light-lane validation ---
+
+def test_validate_light_requires_nonempty_summary():
+    assert validate_light("## Summary\n\nDid a thing.") == []
+    assert validate_light("## Summary\n\n") != []
+    assert validate_light("") != []

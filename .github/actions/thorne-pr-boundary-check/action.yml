@@ -8,4 +8,8 @@ runs:
       shell: bash
       env:
         PR_BODY: ${{ github.event.pull_request.body }}
+        GH_TOKEN: ${{ github.token }}
+        REPO: ${{ github.repository }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        BASE_REF: ${{ github.event.pull_request.base.ref }}
       run: python3 "${GITHUB_ACTION_PATH}/thorne_pr_boundary_check.py"
