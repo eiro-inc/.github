@@ -1,18 +1,35 @@
 #!/usr/bin/env python3
 """Validate Thorne pull-request template boundary declarations.
 
-Importable: ``validate(body) -> list[str]`` returns human-readable error
-strings (empty list means the PR body satisfies the boundary declarations).
+Two lanes, chosen automatically from the files a PR changes:
 
-As a script: reads the PR body from ``PR_BODY``, writes a GitHub step
-summary, emits ``::error::`` annotations, and exits non-zero on any failure.
+* **device** — any changed file that is *not* carved out as non-device in the
+  repo's ``.github/thorne-lanes.yml`` puts the PR on the device path, which
+  requires the full boundary template (:func:`validate`). Everything is device
+  by default; the lanes file lists only the non-device carve-outs.
+* **non-device** — when *every* changed file is carved out as non-device, the
+  PR takes the light path, which only requires a non-empty ``## Summary``
+  (:func:`validate_light`).
+
+Importable pure helpers: ``validate`` / ``validate_light`` (body -> error
+list), ``parse_non_device_globs``, ``glob_match``, ``device_paths``.
+
+As a script: reads ``PR_BODY`` plus ``REPO`` / ``PR_NUMBER`` / ``BASE_REF`` /
+``GH_TOKEN``, determines the lane from the PR's changed files and the lanes
+file on the base branch, writes a GitHub step summary, emits annotations, and
+exits non-zero on failure. Fail-safe: if the lane cannot be determined, the
+device (full) path is used.
 """
 
 from __future__ import annotations
 
+import base64
+import json
 import os
 import re
 import sys
+import urllib.error
+import urllib.request
 
 REQUIRED_SECTIONS = [
     "Summary",
@@ -197,27 +214,240 @@ def validate(body):
     return errors
 
 
-def main():
-    errors = validate(os.environ.get("PR_BODY"))
+def validate_light(body):
+    """Non-device (light) lane: require only a non-empty ``## Summary``."""
+    parsed = sections(body or "")
+    if not substantive_text(parsed.get(normalize_heading("Summary"), "")):
+        return [
+            "Light-lane PR (non-device paths only): add a non-empty ## Summary "
+            "describing the change."
+        ]
+    return []
 
+
+# -----------------------------------------------------------------------------
+# Lane determination (device by default; non-device paths are carved out)
+
+LANES_PATH = ".github/thorne-lanes.yml"
+GITHUB_API = "https://api.github.com"
+
+
+def parse_non_device_globs(yaml_text):
+    """Extract the ``non_device:`` list from a (minimal) thorne-lanes.yml.
+
+    Understands the documented block shape only::
+
+        non_device:
+          - "glob"
+          - glob
+
+    Comments and blank lines are ignored. Returns ``[]`` when the key is
+    absent or empty — i.e., the whole repo is device by default.
+    """
+    globs = []
+    in_list = False
+    for raw in (yaml_text or "").splitlines():
+        line = raw.split("#", 1)[0].rstrip()
+        if not line.strip():
+            continue
+        if re.match(r"^non_device\s*:\s*\[\s*\]\s*$", line):
+            # Explicit empty list: declares no carve-outs. Must NOT open block
+            # mode, or a (malformed) trailing "- glob" would be read as a
+            # carve-out — the opposite of what `[]` declares — and weaken the gate.
+            continue
+        if re.match(r"^non_device\s*:\s*$", line):
+            in_list = True
+            continue
+        if in_list:
+            match = re.match(r"^\s*-\s*(.+?)\s*$", line)
+            if match:
+                value = match.group(1).strip().strip('"').strip("'")
+                if value:
+                    globs.append(value)
+            elif not line[:1].isspace():
+                in_list = False  # a new top-level key ends the list
+    return globs
+
+
+def _glob_to_regex(glob):
+    """Translate a path glob to a regex.
+
+    ``**`` matches across directory separators (any depth); ``*`` matches
+    within a single path segment; ``?`` matches one non-separator character.
+    """
+    i, n = 0, len(glob)
+    out = ["^"]
+    while i < n:
+        char = glob[i]
+        if char == "*":
+            if glob[i : i + 2] == "**":
+                i += 2
+                if i < n and glob[i] == "/":
+                    i += 1
+                out.append(".*")
+            else:
+                out.append("[^/]*")
+                i += 1
+        elif char == "?":
+            out.append("[^/]")
+            i += 1
+        else:
+            out.append(re.escape(char))
+            i += 1
+    out.append("$")
+    return "".join(out)
+
+
+def glob_match(path, glob):
+    """True if ``path`` matches the gitignore-style ``glob``.
+
+    A glob with no wildcard is treated as a path prefix: ``src/ui`` matches
+    ``src/ui`` and anything beneath it.
+    """
+    candidate = (glob or "").strip()
+    if not candidate:
+        return False
+    if not any(ch in candidate for ch in "*?"):
+        candidate = candidate.rstrip("/")
+        return path == candidate or path.startswith(candidate + "/")
+    return re.match(_glob_to_regex(candidate), path) is not None
+
+
+def device_paths(changed_files, non_device_globs):
+    """Changed files that are NOT carved out as non-device (device by default).
+
+    The PR is on the device lane when this list is non-empty.
+    """
+    return [
+        path
+        for path in changed_files
+        if not any(glob_match(path, glob) for glob in non_device_globs)
+    ]
+
+
+def _gh_get(path):
+    token = os.environ.get("GH_TOKEN", "")
+    req = urllib.request.Request(GITHUB_API + path)
+    if token:
+        req.add_header("Authorization", f"Bearer {token}")
+    req.add_header("Accept", "application/vnd.github+json")
+    req.add_header("X-GitHub-Api-Version", "2022-11-28")
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        return json.loads(resp.read().decode("utf-8"))
+
+
+def fetch_changed_files(repo, pr_number):
+    """Return the changed file paths in the PR (paginated).
+
+    A renamed file is reported by the API as a single entry whose ``filename``
+    is the *new* path and whose ``previous_filename`` is the old path. Both are
+    returned, so moving a device file into a non-device carve-out still surfaces
+    the device path and keeps the PR on the device lane.
+    """
+    files = []
+    page = 1
+    while True:
+        batch = _gh_get(f"/repos/{repo}/pulls/{pr_number}/files?per_page=100&page={page}")
+        if not batch:
+            break
+        for item in batch:
+            files.append(item["filename"])
+            previous = item.get("previous_filename")
+            if previous:
+                files.append(previous)
+        if len(batch) < 100:
+            break
+        page += 1
+    return files
+
+
+def fetch_non_device_globs(repo, ref):
+    """Read non_device globs from thorne-lanes.yml at ``ref`` on ``repo``.
+
+    Reads from the PR base ref (not head) so a PR cannot weaken its own lane by
+    editing the lanes file in the same PR. A missing file means no carve-outs.
+    """
+    try:
+        data = _gh_get(f"/repos/{repo}/contents/{LANES_PATH}?ref={ref}")
+    except urllib.error.HTTPError as exc:
+        if exc.code == 404:
+            return []
+        raise
+    content = base64.b64decode(data.get("content", "")).decode("utf-8")
+    return parse_non_device_globs(content)
+
+
+def determine_lane():
+    """Return ``(lane, triggering_paths, note)``.
+
+    ``lane`` is ``"device"`` or ``"non_device"``. ``triggering_paths`` lists the
+    changed files that forced the device lane (for an actionable message).
+    Fail-safe: any inability to determine the lane yields ``"device"``.
+    """
+    repo = os.environ.get("REPO", "").strip()
+    pr_number = os.environ.get("PR_NUMBER", "").strip()
+    base_ref = os.environ.get("BASE_REF", "").strip()
+
+    if not (repo and pr_number):
+        return "device", [], "PR context unavailable; defaulting to the device (full) path."
+    try:
+        changed = fetch_changed_files(repo, pr_number)
+        globs = fetch_non_device_globs(repo, base_ref) if base_ref else []
+    except Exception as exc:  # noqa: BLE001 — any API failure must fail safe to device
+        return "device", [], f"Could not determine lane from changed paths ({exc}); defaulting to the device (full) path."
+
+    if not changed:
+        return "device", [], "No changed files reported; defaulting to the device (full) path."
+    triggering = device_paths(changed, globs)
+    if triggering:
+        return "device", triggering, ""
+    return "non_device", [], ""
+
+
+def main():
+    body = os.environ.get("PR_BODY")
+    lane, triggering, note = determine_lane()
+    errors = validate(body) if lane == "device" else validate_light(body)
+
+    lane_label = "device (full template)" if lane == "device" else "non-device (light)"
     summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary_path:
         with open(summary_path, "a", encoding="utf-8") as handle:
+            handle.write("## Thorne PR Boundary Check\n\n")
+            handle.write(f"**Lane:** {lane_label}\n\n")
+            if note:
+                handle.write(f"_{note}_\n\n")
+            if lane == "device" and triggering:
+                handle.write(
+                    "On the device path because these changed files are not carved out as "
+                    "non-device in `.github/thorne-lanes.yml`:\n\n"
+                )
+                for path in triggering[:20]:
+                    handle.write(f"- `{path}`\n")
+                if len(triggering) > 20:
+                    handle.write(f"- …and {len(triggering) - 20} more\n")
+                handle.write("\n")
             if errors:
-                handle.write("## Thorne PR Boundary Check\n\nFailed checks:\n\n")
+                handle.write("Failed checks:\n\n")
                 for error in errors:
                     handle.write(f"- {error}\n")
             else:
-                handle.write(
-                    "## Thorne PR Boundary Check\n\nAll required PR boundary declarations are present.\n"
-                )
+                handle.write("All required PR boundary declarations are present.\n")
+
+    if note:
+        print(f"::notice::{note}")
+    if lane == "device" and triggering:
+        shown = ", ".join(triggering[:10])
+        if len(triggering) > 10:
+            shown += f", and {len(triggering) - 10} more"
+        print(f"::notice::Device path triggered by: {shown}")
 
     if errors:
         for error in errors:
             print(f"::error::{error}")
         sys.exit(1)
 
-    print("Thorne PR boundary declarations are complete.")
+    print(f"Thorne PR boundary declarations are complete (lane: {lane}).")
 
 
 if __name__ == "__main__":

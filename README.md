@@ -18,7 +18,7 @@ Repositories inherit this template unless they define a repository-local `.githu
 
 ### Thorne PR Boundary Check
 
-`.github/actions/thorne-pr-boundary-check` validates that a pull request using the organization template has completed the Thorne-specific sections. Its validator (`thorne_pr_boundary_check.py`) is an importable module with unit tests (run by `test-thorne-boundary-check.yml`). The action checks PR-body declarations only; repository-specific static import-boundary checks remain local to each source-code repository.
+`.github/actions/thorne-pr-boundary-check` validates that a pull request using the organization template has completed the Thorne-specific sections required for its lane. Its validator (`thorne_pr_boundary_check.py`) is an importable module with unit tests (run by `test-thorne-boundary-check.yml`). The action reads the PR's changed files and the base branch's `.github/thorne-lanes.yml`: paths are device by default, and listed `non_device` globs opt paths into the light non-device lane. Repository-specific static import-boundary checks remain local to each source-code repository.
 
 To use it in a repository, add this workflow:
 
@@ -46,6 +46,8 @@ After adding the workflow, configure the repository's branch protection or organ
 
 The workflow enforces:
 
+- Device-by-default lane selection from changed files, with non-device carve-outs declared in `.github/thorne-lanes.yml` on the base branch.
+- A non-empty `## Summary` for non-device light-lane PRs.
 - Required Thorne template sections are present.
 - At least one Thorne Scope item is checked.
 - `Not Thorne-related` is not combined with Thorne-specific scope items.
