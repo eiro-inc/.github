@@ -7,6 +7,7 @@ from thorne_pr_boundary_check import (
     THORNE_SCOPE_ITEMS,
     determine_lane,
     device_paths,
+    fetch_changed_files,
     glob_match,
     parse_non_device_globs,
     validate,
@@ -211,6 +212,29 @@ def test_determine_lane_fails_safe_when_no_changed_files(monkeypatch):
     assert lane == "device"
     assert triggering == []
     assert "No changed files reported" in note
+
+
+def test_fetch_changed_files_includes_rename_old_path(monkeypatch):
+    # A rename is one API entry: new path in `filename`, old path in
+    # `previous_filename`. Both must surface, so moving a device file into a
+    # carve-out still puts the old device path on the device lane.
+    batch = [
+        {
+            "filename": "docs/lib.rs",
+            "status": "renamed",
+            "previous_filename": "crates/scoring/lib.rs",
+        },
+        {"filename": "src/app.ts", "status": "modified"},
+    ]
+    monkeypatch.setattr("thorne_pr_boundary_check._gh_get", lambda path: batch)
+
+    files = fetch_changed_files("eiro-inc/thorne-core", "7")
+
+    assert "docs/lib.rs" in files
+    assert "crates/scoring/lib.rs" in files  # old path of the rename
+    assert "src/app.ts" in files
+    # the old device path forces the device lane even under a docs/** carve-out
+    assert "crates/scoring/lib.rs" in device_paths(files, ["docs/**"])
 
 
 # --- Light-lane validation ---

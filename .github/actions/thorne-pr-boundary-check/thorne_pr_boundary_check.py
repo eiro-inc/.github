@@ -332,14 +332,24 @@ def _gh_get(path):
 
 
 def fetch_changed_files(repo, pr_number):
-    """Return the changed file paths in the PR (paginated)."""
+    """Return the changed file paths in the PR (paginated).
+
+    A renamed file is reported by the API as a single entry whose ``filename``
+    is the *new* path and whose ``previous_filename`` is the old path. Both are
+    returned, so moving a device file into a non-device carve-out still surfaces
+    the device path and keeps the PR on the device lane.
+    """
     files = []
     page = 1
     while True:
         batch = _gh_get(f"/repos/{repo}/pulls/{pr_number}/files?per_page=100&page={page}")
         if not batch:
             break
-        files.extend(item["filename"] for item in batch)
+        for item in batch:
+            files.append(item["filename"])
+            previous = item.get("previous_filename")
+            if previous:
+                files.append(previous)
         if len(batch) < 100:
             break
         page += 1
