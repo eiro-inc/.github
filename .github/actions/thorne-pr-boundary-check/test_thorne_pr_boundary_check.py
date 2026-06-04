@@ -1,5 +1,10 @@
 """Unit tests for the Thorne PR boundary-check validator."""
 
+import pathlib
+import urllib.error
+
+import pytest
+
 from thorne_pr_boundary_check import (
     ALL_BOUNDARY_ITEMS,
     MANDATORY_BOUNDARY_ITEMS,
@@ -8,6 +13,7 @@ from thorne_pr_boundary_check import (
     determine_lane,
     device_paths,
     fetch_changed_files,
+    fetch_non_device_globs,
     glob_match,
     parse_non_device_globs,
     validate,
@@ -185,6 +191,17 @@ def test_glob_bare_path_is_treated_as_prefix():
     assert not glob_match("src/uikit/x", "src/ui")
 
 
+def test_glob_question_mark_matches_one_non_separator_char():
+    assert glob_match("src/a.ts", "src/?.ts")
+    assert not glob_match("src/ab.ts", "src/?.ts")  # ? is exactly one char
+    assert not glob_match("a/c", "a?c")  # ? does not cross a separator
+
+
+def test_glob_match_empty_or_whitespace_glob_is_false():
+    for empty in ("", "   ", None):
+        assert not glob_match("docs/x.md", empty)
+
+
 # --- Lane detection: device-by-default decision ---
 
 def test_device_by_default_when_no_carveouts():
@@ -244,9 +261,55 @@ def test_fetch_changed_files_includes_rename_old_path(monkeypatch):
     assert "crates/scoring/lib.rs" in device_paths(files, ["docs/**"])
 
 
+def test_fetch_non_device_globs_returns_empty_when_lanes_file_missing(monkeypatch):
+    # No thorne-lanes.yml is the common early-adopter case: 404 -> no carve-outs.
+    def raise_404(path):
+        raise urllib.error.HTTPError(path, 404, "Not Found", {}, None)
+
+    monkeypatch.setattr("thorne_pr_boundary_check._gh_get", raise_404)
+    assert fetch_non_device_globs("eiro-inc/thorne-core", "main") == []
+
+
+def test_fetch_non_device_globs_reraises_non_404(monkeypatch):
+    # A real fetch error must not be swallowed into "no carve-outs"; determine_lane
+    # catches it and fails safe to the device lane.
+    def raise_500(path):
+        raise urllib.error.HTTPError(path, 500, "Server Error", {}, None)
+
+    monkeypatch.setattr("thorne_pr_boundary_check._gh_get", raise_500)
+    with pytest.raises(urllib.error.HTTPError):
+        fetch_non_device_globs("eiro-inc/thorne-core", "main")
+
+
 # --- Light-lane validation ---
 
 def test_validate_light_requires_nonempty_summary():
     assert validate_light("## Summary\n\nDid a thing.") == []
     assert validate_light("## Summary\n\n") != []
     assert validate_light("") != []
+
+
+# --- Shipped org PR template parses through the validator ---
+# .github/actions/thorne-pr-boundary-check/<this file> -> .github/pull_request_template.md
+_TEMPLATE_PATH = pathlib.Path(__file__).resolve().parents[2] / "pull_request_template.md"
+
+
+def _org_template():
+    return _TEMPLATE_PATH.read_text(encoding="utf-8")
+
+
+def test_org_template_sections_are_all_discoverable():
+    # Device sections live inside a <details> block; sections() must still find
+    # every required heading. Guards against a template edit that breaks parsing.
+    errors = validate(_org_template())
+    assert not any(e.startswith("Missing required section") for e in errors)
+
+
+def test_filled_org_template_passes_device_validation():
+    # Fill the shipped template as a coherent device PR and confirm validate()
+    # accepts it — so a future structural edit can't silently break the gate.
+    body = _org_template()
+    for item in ("Device function", "Class B", *MANDATORY_BOUNDARY_ITEMS):
+        body = body.replace(f"- [ ] {item}", f"- [x] {item}")
+    body = body.replace("## DHF Trace\n", "## DHF Trace\n\nTraces to DDS §5.\n")
+    assert validate(body) == []
