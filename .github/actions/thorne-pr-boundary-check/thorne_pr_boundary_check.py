@@ -250,7 +250,12 @@ def parse_non_device_globs(yaml_text):
         line = raw.split("#", 1)[0].rstrip()
         if not line.strip():
             continue
-        if re.match(r"^non_device\s*:\s*(\[\s*\])?\s*$", line):
+        if re.match(r"^non_device\s*:\s*\[\s*\]\s*$", line):
+            # Explicit empty list: declares no carve-outs. Must NOT open block
+            # mode, or a (malformed) trailing "- glob" would be read as a
+            # carve-out — the opposite of what `[]` declares — and weaken the gate.
+            continue
+        if re.match(r"^non_device\s*:\s*$", line):
             in_list = True
             continue
         if in_list:

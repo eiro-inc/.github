@@ -154,6 +154,13 @@ def test_parse_non_device_globs_absent_or_empty_means_no_carveouts():
     assert parse_non_device_globs("some_other_key:\n  - x\n") == []
 
 
+def test_parse_non_device_globs_explicit_empty_list_does_not_open_block():
+    # `non_device: []` declares no carve-outs; a (malformed) trailing dash line
+    # must not be read as one, even though a real YAML parser would reject it.
+    assert parse_non_device_globs("non_device: []\n  - docs/**\n") == []
+    assert parse_non_device_globs("non_device: [ ]\n  - docs/**\n") == []
+
+
 def test_parse_non_device_globs_stops_at_next_top_level_key():
     yml = "non_device:\n  - docs/**\nother:\n  - not-a-glob\n"
     assert parse_non_device_globs(yml) == ["docs/**"]
