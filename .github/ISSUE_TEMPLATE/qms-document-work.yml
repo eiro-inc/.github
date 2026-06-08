@@ -1,0 +1,84 @@
+name: SOP-001 controlled-document work
+description: Author, revise, or obsolete a controlled document governed by SOP-001 (Quality Manual, SOP, WI, FRM, REC, QMS-level ADR, or non-QMS POL)
+title: "[QMS] "
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for controlled-document work in `eiro-qms` governed by SOP-001 Document Control. For device-specific DHF documents (UNS, SRS, SDD, HAZ, DR, VVP, VVR), use the Thorne DHF artifact form instead. For tooling or automation in `eiro-qms`, use the infrastructure / tooling form.
+
+  - type: dropdown
+    id: document-tier
+    attributes:
+      label: Document tier / type
+      description: Per the QMS hierarchy and SOP-001 §5.2 identifier prefixes.
+      options:
+        - QM — Quality Manual
+        - SOP — Standard Operating Procedure
+        - WI — Work Instruction
+        - FRM — Form
+        - REC — Record
+        - ADR — Architectural Decision Record (QMS-level)
+        - POL — Policy / non-QMS controlled document
+    validations:
+      required: false
+
+  - type: input
+    id: document-id
+    attributes:
+      label: Document ID or planned ID
+      description: Existing ID for a revision/obsoletion, or the planned ID for a new document. SOP-001 §5.1 — identifiers are never reused.
+      placeholder: "SOP-001, FRM-002, QM, ADR-0003, POL-001"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: change-type
+    attributes:
+      label: Change type
+      options:
+        - New document (first issuance, Revision 1)
+        - Revision to existing document
+        - Obsoletion / withdrawal
+    validations:
+      required: false
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Change scope and rationale
+      description: What the document must cover (or what changes and why). State what is out of scope. Describe real practice, not aspirational practice.
+    validations:
+      required: false
+
+  - type: textarea
+    id: hierarchy-impact
+    attributes:
+      label: Hierarchy and cross-reference impact
+      description: Identify governing higher-tier documents this must not contradict, and any lower-tier documents, forms, or DHF records affected. Cite by ID (e.g. "governed by QM §3; affects FRM-002").
+    validations:
+      required: false
+
+  - type: textarea
+    id: review-dependency
+    attributes:
+      label: Review / approval dependency
+      description: Prerequisite PRs, required reviewers, or higher-tier amendments that must land first. SOP-001 requires two-eyes review; approval is by PR merge.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: control-guard
+    attributes:
+      label: Document-control guard
+      options:
+        - label: This change follows SOP-001 (PR-based, two-eyes review); Action-managed header fields (Status, Revision, Date, Author, Approver) and Change History rows will be left to the stamp-approver Action, not set manually.
+          required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes / blockers
+    validations:
+      required: false
