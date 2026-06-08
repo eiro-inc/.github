@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Use this form for engineering work that is not Thorne device, non-device product, or DHF work. For those, use the corresponding Thorne template.
+        Use this form for engineering work that is not Thorne device, non-device product, DHF, or pre-design scaffolding (CMP §7) work. For those, use the corresponding Thorne template. Scaffolding inside `thorne-*` repos uses the pre-design scaffolding form.
 
   - type: dropdown
     id: repository
@@ -61,8 +61,8 @@ body:
     attributes:
       label: Scope guard
       options:
-        - label: This work is not Thorne device-function, non-device product, or DHF work; if it becomes any of those, a Thorne template issue will be filed instead.
-          required: false
+        - label: This work is not Thorne device-function, non-device product, DHF, or pre-design scaffolding (CMP §7) work; if it becomes any of those, a Thorne template issue will be filed instead.
+          required: true
 
   - type: textarea
     id: notes
