@@ -1,5 +1,5 @@
-name: QMS document work
-description: Author, revise, or obsolete a controlled QMS document (Quality Manual, SOP, WI, FRM, REC, ADR, POL)
+name: SOP-001 controlled-document work
+description: Author, revise, or obsolete a controlled document governed by SOP-001 (Quality Manual, SOP, WI, FRM, REC, QMS-level ADR, or non-QMS POL)
 title: "[QMS] "
 labels: ["documentation"]
 body:
