@@ -1,0 +1,72 @@
+name: Infrastructure / tooling (non-Thorne)
+description: Internal tooling, CI/CD, QMS tooling, or cross-repo engineering work not tied to a specific device
+title: "[Infra] "
+labels: ["infrastructure"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for engineering work that is not Thorne device, non-device product, DHF, or pre-design scaffolding (CMP §7) work. For those, use the corresponding Thorne template. Scaffolding inside `thorne-*` repos uses the pre-design scaffolding form.
+
+  - type: dropdown
+    id: repository
+    attributes:
+      label: Repository / workstream
+      options:
+        - eiro-compliance-tools
+        - eiro-qms (tooling/automation)
+        - eiro-aws
+        - eiro-aws-tooling
+        - aws-security-baseline
+        - eiro-security
+        - npm-packages
+        - .github (org templates/actions)
+        - Cross-repo / other
+    validations:
+      required: false
+
+  - type: dropdown
+    id: work-type
+    attributes:
+      label: Work type
+      options:
+        - Bug / defect
+        - Feature / enhancement
+        - CI/CD infrastructure
+        - Maintenance / chore
+        - Security / scanning
+        - Documentation
+    validations:
+      required: false
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Work scope
+      description: Describe the work and the files/modules expected to change. For bugs, include observed and expected behavior.
+    validations:
+      required: false
+
+  - type: textarea
+    id: verification
+    attributes:
+      label: Verification plan
+      description: State how this work will be checked.
+      placeholder: "CI build, lint, unit tests, manual run against sample input, PR review"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: scope-guard
+    attributes:
+      label: Scope guard
+      options:
+        - label: This work is not Thorne device-function, non-device product, DHF, or pre-design scaffolding (CMP §7) work; if it becomes any of those, a Thorne template issue will be filed instead.
+          required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes / blockers
+    validations:
+      required: false
