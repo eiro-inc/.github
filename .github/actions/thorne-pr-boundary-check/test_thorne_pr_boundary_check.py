@@ -15,6 +15,7 @@ from thorne_pr_boundary_check import (
     fetch_changed_files,
     fetch_non_device_globs,
     glob_match,
+    is_whitelisted,
     parse_non_device_globs,
     validate,
     validate_light,
@@ -286,6 +287,30 @@ def test_fetch_non_device_globs_reraises_non_404(monkeypatch):
 def test_validate_light_requires_nonempty_summary():
     assert validate_light("## Summary\n\nDid a thing.") == []
     assert validate_light("## Summary\n\n") != []
+    assert validate_light("") != []
+
+
+# --- Non-device actor whitelist ---
+
+def test_is_whitelisted_recognizes_automation_logins():
+    assert is_whitelisted("dependabot[bot]")
+    assert not is_whitelisted("test-eiro")
+    assert not is_whitelisted("")
+    assert not is_whitelisted(None)
+
+
+def test_validate_light_whitelists_whitelisted_actor():
+    # A raw bot body (no Summary) would fail the Summary requirement; a whitelisted
+    # actor passes anyway, because reaching the non_device lane already proves
+    # every changed file is a declared non-device path.
+    assert validate_light("", "dependabot[bot]") == []
+    assert validate_light(None, "dependabot[bot]") == []
+
+
+def test_validate_light_non_whitelisted_actor_still_needs_summary():
+    assert validate_light("", "test-eiro") != []
+    assert validate_light("## Summary\n\nA change.", "test-eiro") == []
+    # default (no actor) is the non-whitelisted path
     assert validate_light("") != []
 
 
