@@ -1,0 +1,24 @@
+name: "Dependabot Thorne Boundary Inject"
+description: >-
+  On a device-lane Dependabot PR, inject the org PR template (unchecked) so a
+  human can classify it before merge. No-op on non-device PRs — the boundary
+  check auto-approves those. Consume from a pull_request_target workflow gated to
+  the dependabot[bot] actor.
+
+inputs:
+  github-token:
+    description: "Token with pull-requests: write on the PR's repository (pass secrets.GITHUB_TOKEN)."
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Inject device-lane Thorne template if absent
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        REPO: ${{ github.repository }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        BASE_REF: ${{ github.event.pull_request.base.ref }}
+        MARKER: "<!-- thorne-boundary-block -->"
+      run: python3 "${GITHUB_ACTION_PATH}/dependabot_thorne_inject.py"
