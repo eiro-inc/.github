@@ -4,16 +4,23 @@ on:
   pull_request:
     paths:
       - ".github/actions/thorne-pr-boundary-check/**"
+      - ".github/actions/dependabot-thorne-inject/**"
       - ".github/workflows/test-thorne-boundary-check.yml"
   push:
     branches: [main]
     paths:
       - ".github/actions/thorne-pr-boundary-check/**"
+      - ".github/actions/dependabot-thorne-inject/**"
 
 jobs:
   pytest:
-    name: Unit tests
+    name: Unit tests (${{ matrix.action }})
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        action:
+          - thorne-pr-boundary-check
+          - dependabot-thorne-inject
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -21,4 +28,4 @@ jobs:
           python-version: "3.12"
       - run: pip install pytest
       - run: pytest -q
-        working-directory: .github/actions/thorne-pr-boundary-check
+        working-directory: .github/actions/${{ matrix.action }}
