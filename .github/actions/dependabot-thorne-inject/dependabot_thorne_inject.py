@@ -49,8 +49,18 @@ def build_body(original, marker, note, template):
     return f"{head}{marker}\n\n{note}\n\n{template}\n"
 
 
+def has_required_sections(boundary, body):
+    """True if ``body`` already contains every Thorne template section."""
+    parsed = boundary.sections(body or "")
+    return all(
+        boundary.normalize_heading(section) in parsed
+        for section in boundary.REQUIRED_SECTIONS
+    )
+
+
 def main():
-    lane, _triggering, _note = _load_boundary().determine_lane()
+    boundary = _load_boundary()
+    lane, _triggering, _note = boundary.determine_lane()
     if lane != "device":
         print(f"Lane is '{lane}'; the boundary check handles it. Nothing to inject.")
         return 0
@@ -60,7 +70,7 @@ def main():
     marker = os.environ.get("MARKER", MARKER_DEFAULT)
 
     body = gh("pr", "view", pr_number, "--repo", repo, "--json", "body", "--jq", '.body // ""')
-    if marker in body:
+    if marker in body or has_required_sections(boundary, body):
         print("Marker present — template already injected; nothing to do.")
         return 0
 

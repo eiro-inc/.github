@@ -3,12 +3,19 @@
 import dependabot_thorne_inject as inj
 
 
+# Captured once, before any monkeypatch of _load_boundary.
+_REAL_BOUNDARY = inj._load_boundary()
+
+
 class _StubBoundary:
     def __init__(self, lane):
         self._lane = lane
 
     def determine_lane(self):
         return (self._lane, [], "")
+
+    def __getattr__(self, name):
+        return getattr(_REAL_BOUNDARY, name)
 
 
 def test_load_boundary_imports_sibling_module():
@@ -57,6 +64,32 @@ def test_main_noops_when_marker_already_present(monkeypatch):
 
     assert inj.main() == 0
     assert not any(a[:2] == ("pr", "edit") for a in calls)  # no re-inject
+
+
+def test_has_required_sections_detects_full_template():
+    boundary = inj._load_boundary()
+    full = "\n\n".join(f"## {section}\n\nx" for section in boundary.REQUIRED_SECTIONS)
+    assert inj.has_required_sections(boundary, full)
+    assert not inj.has_required_sections(boundary, "Bumps foo from 1 to 2.")
+
+
+def test_main_noops_when_body_already_has_template(monkeypatch):
+    # Body already carries every section but NO marker — must not re-append.
+    boundary = inj._load_boundary()
+    body = "\n\n".join(f"## {section}\n\nx" for section in boundary.REQUIRED_SECTIONS)
+    calls = []
+
+    def fake_gh(*a):
+        calls.append(a)
+        return body if a[:2] == ("pr", "view") else ""
+
+    monkeypatch.setattr(inj, "_load_boundary", lambda: _StubBoundary("device"))
+    monkeypatch.setattr(inj, "gh", fake_gh)
+    monkeypatch.setenv("REPO", "eiro-inc/x")
+    monkeypatch.setenv("PR_NUMBER", "1")
+
+    assert inj.main() == 0
+    assert not any(a[:2] == ("pr", "edit") for a in calls)
 
 
 def test_main_injects_template_on_device_without_marker(monkeypatch):
