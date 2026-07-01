@@ -141,6 +141,38 @@ def test_not_thorne_combined_with_device_fails():
     assert any("Not Thorne-related" in e for e in validate(body))
 
 
+# --- Whitespace tolerance: wording matches regardless of spacing ---
+
+def test_extra_whitespace_in_checklist_items_still_matches():
+    # Double spaces and tabs inside an item must not break the match: the gate
+    # keys on wording, not exact spacing.
+    body = make_body(["Device function"], ["Class B"], MANDATORY_BOUNDARY_ITEMS, "DDS §5")
+    body = body.replace("- [x] Class B", "- [x] Class  B")
+    body = body.replace("- [x] Device function", "- [x] Device\tfunction")
+    assert validate(body) == []
+
+
+def test_reflowed_boundary_item_still_confirmed():
+    # A long boundary sentence that picked up an extra space still counts as
+    # confirmed once whitespace is collapsed.
+    body = make_body(["Non-device function"], boundary_checked=MANDATORY_BOUNDARY_ITEMS, dhf_trace="<!-- n/a -->")
+    original = MANDATORY_BOUNDARY_ITEMS[0]
+    body = body.replace(original, original.replace(" ", "  ", 1))
+    assert validate(body) == []
+
+
+def test_extra_whitespace_in_heading_still_discovered():
+    body = make_body(["Non-device function"], boundary_checked=MANDATORY_BOUNDARY_ITEMS, dhf_trace="<!-- n/a -->")
+    body = body.replace("## Reviewer Notes", "##   Reviewer   Notes")
+    assert not any("Reviewer Notes" in e for e in validate(body))
+
+
+def test_indented_heading_still_discovered():
+    body = make_body(["Non-device function"], boundary_checked=MANDATORY_BOUNDARY_ITEMS, dhf_trace="<!-- n/a -->")
+    body = body.replace("## Reviewer Notes", "   ## Reviewer Notes")
+    assert not any("Missing required section: ## Reviewer Notes" == e for e in validate(body))
+
+
 # --- Lane detection: parsing thorne-lanes.yml ---
 
 def test_parse_non_device_globs_block_list():

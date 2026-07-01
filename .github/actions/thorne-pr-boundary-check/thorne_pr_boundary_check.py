@@ -100,14 +100,26 @@ ANCHOR_RE = re.compile(
 )
 
 
+def collapse_whitespace(text):
+    """Collapse internal whitespace runs to a single space and trim.
+
+    Template text copied between editors accumulates double spaces, tabs,
+    non-breaking spaces, and hard line wraps. Collapsing every whitespace run
+    to a single space lets a reflowed heading or checklist item still match its
+    canonical form, so the gate keys on wording rather than exact spacing.
+    """
+    return re.sub(r"\s+", " ", text or "").strip()
+
+
 def normalize_heading(text):
-    return text.strip().lower()
+    return collapse_whitespace(text).lower()
 
 
 def sections(markdown):
     """Map normalized ``## heading`` -> section body text."""
     found = {}
-    matches = list(re.finditer(r"(?m)^##\s+(.+?)\s*$", markdown))
+    # Up to three leading spaces are still a valid ATX heading (CommonMark).
+    matches = list(re.finditer(r"(?m)^ {0,3}##\s+(.+?)\s*$", markdown))
     for index, match in enumerate(matches):
         title = match.group(1).strip()
         start = match.end()
@@ -121,7 +133,7 @@ def checked_items(section_text):
     for line in section_text.splitlines():
         match = re.match(r"^\s*-\s+\[[xX]\]\s+(.+?)\s*$", line)
         if match:
-            checked.add(match.group(1).strip())
+            checked.add(collapse_whitespace(match.group(1)))
     return checked
 
 
@@ -130,7 +142,7 @@ def present_items(section_text):
     for line in section_text.splitlines():
         match = re.match(r"^\s*-\s+\[[ xX]\]\s+(.+?)\s*$", line)
         if match:
-            present.add(match.group(1).strip())
+            present.add(collapse_whitespace(match.group(1)))
     return present
 
 
@@ -169,7 +181,7 @@ def validate(body):
         text = parsed.get(normalize_heading(section), "")
         if not text:
             continue
-        missing = sorted(expected - present_items(text))
+        missing = sorted({collapse_whitespace(item) for item in expected} - present_items(text))
         if missing:
             errors.append(
                 f"Section ## {section} is missing checklist item(s): {', '.join(missing)}"
@@ -203,12 +215,12 @@ def validate(body):
                 )
 
         for item in MANDATORY_BOUNDARY_ITEMS:
-            if item not in boundary_checked:
+            if collapse_whitespace(item) not in boundary_checked:
                 errors.append(f"Thorne-related PRs must confirm boundary item: {item}")
 
         if "Pre-design scaffolding under CMP §7" in scope_checked:
             for item in PRE_DESIGN_BOUNDARY_ITEMS:
-                if item not in boundary_checked:
+                if collapse_whitespace(item) not in boundary_checked:
                     errors.append(f"Pre-design scaffolding PRs must confirm boundary item: {item}")
 
     return errors
