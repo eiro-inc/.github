@@ -8,6 +8,7 @@ runs:
       shell: bash
       env:
         PR_BODY: ${{ github.event.pull_request.body }}
+        PR_ACTOR: ${{ github.actor }}
         GH_TOKEN: ${{ github.token }}
         REPO: ${{ github.repository }}
         PR_NUMBER: ${{ github.event.pull_request.number }}

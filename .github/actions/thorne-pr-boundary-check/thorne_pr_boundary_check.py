@@ -9,10 +9,11 @@ Two lanes, chosen automatically from the files a PR changes:
   by default; the lanes file lists only the non-device carve-outs.
 * **non-device** — when *every* changed file is carved out as non-device, the
   PR takes the light path, which only requires a non-empty ``## Summary``
-  (:func:`validate_light`).
+  (:func:`validate_light`) — except a non-device PR from a whitelisted actor
+  (e.g. Dependabot).
 
-Importable pure helpers: ``validate`` / ``validate_light`` (body -> error
-list), ``parse_non_device_globs``, ``glob_match``, ``device_paths``.
+Importable pure helpers: ``validate`` / ``validate_light`` (body -> error list),
+``parse_non_device_globs``, ``glob_match``, ``device_paths``, ``is_whitelisted``.
 
 As a script: reads ``PR_BODY`` plus ``REPO`` / ``PR_NUMBER`` / ``BASE_REF`` /
 ``GH_TOKEN``, determines the lane from the PR's changed files and the lanes
@@ -214,8 +215,20 @@ def validate(body):
     return errors
 
 
-def validate_light(body):
-    """Non-device (light) lane: require only a non-empty ``## Summary``."""
+# PR actors whose non-device PRs are whitelisted (no authored body required) —
+# trusted automation. Matched against github.actor, so a human editing the PR
+# de-whitelists it and is then asked for a Summary.
+WHITELISTED_ACTORS = {"dependabot[bot]"}
+
+
+def is_whitelisted(actor):
+    return (actor or "").strip() in WHITELISTED_ACTORS
+
+
+def validate_light(body, actor=""):
+    """Non-device (light) lane: require only a non-empty ``## Summary`` or whitelisted actor."""
+    if is_whitelisted(actor):
+        return []
     parsed = sections(body or "")
     if not substantive_text(parsed.get(normalize_heading("Summary"), "")):
         return [
@@ -401,13 +414,16 @@ def determine_lane():
     triggering = device_paths(changed, globs)
     if triggering:
         return "device", triggering, ""
-    return "non_device", [], ""
+    actor = os.environ.get("PR_ACTOR", "").strip()
+    note = f"Whitelisted actor ({actor}); auto-approved." if is_whitelisted(actor) else ""
+    return "non_device", [], note
 
 
 def main():
     body = os.environ.get("PR_BODY")
+    actor = os.environ.get("PR_ACTOR", "")
     lane, triggering, note = determine_lane()
-    errors = validate(body) if lane == "device" else validate_light(body)
+    errors = validate(body) if lane == "device" else validate_light(body, actor)
 
     lane_label = "device (full template)" if lane == "device" else "non-device (light)"
     summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
