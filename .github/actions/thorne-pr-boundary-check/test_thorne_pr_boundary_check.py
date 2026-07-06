@@ -232,7 +232,7 @@ def test_determine_lane_fails_safe_when_no_changed_files(monkeypatch):
     monkeypatch.setattr("thorne_pr_boundary_check.fetch_changed_files", lambda repo, pr: [])
     monkeypatch.setattr("thorne_pr_boundary_check.fetch_non_device_globs", lambda repo, ref: ["docs/**"])
 
-    lane, triggering, note = determine_lane()
+    lane, triggering, changed, note = determine_lane()
 
     assert lane == "device"
     assert triggering == []
@@ -338,3 +338,64 @@ def test_filled_org_template_passes_device_validation():
         body = body.replace(f"- [ ] {item}", f"- [x] {item}")
     body = body.replace("## DHF Trace\n", "## DHF Trace\n\nTraces to DDS §5.\n")
     assert validate(body) == []
+
+
+# --- New Dependencies (CMP §10) conditional check ---
+
+from thorne_pr_boundary_check import (  # noqa: E402
+    dependency_manifest_paths,
+    validate_new_dependencies,
+)
+
+
+def test_dependency_manifest_paths_matches_all_ecosystems():
+    changed = [
+        "svc-capture/package.json",
+        "package-lock.json",
+        "crates/thorne-app/Cargo.toml",
+        "Cargo.lock",
+        "app/build.gradle.kts",
+        "gradle/libs.versions.toml",
+        "gradle.lockfile",
+        "thorne-ios/Package.resolved",
+        "src/handler.ts",
+        "docs/notes.md",
+    ]
+    hits = dependency_manifest_paths(changed)
+    assert "src/handler.ts" not in hits
+    assert "docs/notes.md" not in hits
+    assert len(hits) == 8
+
+
+def test_no_manifest_change_requires_nothing():
+    assert validate_new_dependencies("anything", []) == []
+
+
+def test_manifest_change_with_missing_section_fails():
+    body = "## Summary\n\nAdds a package.\n"
+    messages = validate_new_dependencies(body, ["package.json"])
+    assert len(messages) == 1
+    assert "New Dependencies" in messages[0]
+
+
+def test_manifest_change_with_bare_none_fails():
+    body = "## New Dependencies\n\n- None\n"
+    assert validate_new_dependencies(body, ["Cargo.lock"])
+
+
+def test_manifest_change_with_explained_none_passes():
+    body = "## New Dependencies\n\n- None — lockfile refresh only, no dependency changes.\n"
+    assert validate_new_dependencies(body, ["package-lock.json"]) == []
+
+
+def test_manifest_change_with_declaration_passes():
+    body = (
+        "## New Dependencies\n\n"
+        "- ulid@2.4.0 — runtime, device path (svc-capture) — ReportId generation — MIT — active\n"
+    )
+    assert validate_new_dependencies(body, ["svc-capture/package.json"]) == []
+
+
+def test_template_comment_alone_is_not_substantive():
+    body = "## New Dependencies\n\n<!-- list deps here -->\n"
+    assert validate_new_dependencies(body, ["package.json"])

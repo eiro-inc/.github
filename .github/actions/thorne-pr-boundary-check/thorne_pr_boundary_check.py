@@ -148,6 +148,59 @@ def substantive_text(section_text):
     return "\n".join(cleaned).strip()
 
 
+NEW_DEPENDENCIES_SECTION = "New Dependencies"
+
+# Files whose change means the PR touches the dependency set (CMP §10).
+_DEPENDENCY_MANIFEST_NAMES = {
+    "package.json",
+    "package-lock.json",
+    "pnpm-lock.yaml",
+    "yarn.lock",
+    "Cargo.toml",
+    "Cargo.lock",
+    "gradle.lockfile",
+    "libs.versions.toml",
+    "Package.swift",
+    "Package.resolved",
+}
+_DEPENDENCY_MANIFEST_SUFFIXES = (".gradle", ".gradle.kts")
+
+
+def dependency_manifest_paths(changed_files):
+    """Changed files that are dependency manifests or lockfiles."""
+    hits = []
+    for path in changed_files:
+        base = path.rsplit("/", 1)[-1]
+        if base in _DEPENDENCY_MANIFEST_NAMES or base.endswith(_DEPENDENCY_MANIFEST_SUFFIXES):
+            hits.append(path)
+    return hits
+
+
+def validate_new_dependencies(body, manifest_hits):
+    """CMP §10: a manifest change requires a substantive New Dependencies declaration.
+
+    A bare "None" is rejected when manifests changed — say *why* the change
+    introduces no new/upgraded dependency (e.g. "None — lockfile refresh only").
+    """
+    if not manifest_hits:
+        return []
+    parsed = sections(body or "")
+    text = substantive_text(parsed.get(normalize_heading(NEW_DEPENDENCIES_SECTION), ""))
+    bare = text.lower().lstrip("-* ").strip()
+    if text and bare not in {"none", "none."}:
+        return []
+    shown = ", ".join(f"`{path}`" for path in manifest_hits[:5])
+    if len(manifest_hits) > 5:
+        shown += f", and {len(manifest_hits) - 5} more"
+    return [
+        "Dependency manifests changed (" + shown + ") but '## New Dependencies' "
+        "has no substantive declaration. List each new or upgraded dependency "
+        "(name@version — runtime|dev — device path? — purpose — license — "
+        "maintenance note), or state why none is introduced "
+        "(e.g. 'None — lockfile refresh only, no dependency changes'). Per CMP §10."
+    ]
+
+
 def validate(body):
     """Return a list of declaration errors for the given PR body."""
     body = body or ""
@@ -394,7 +447,8 @@ def determine_lane():
     """Return ``(lane, triggering_paths, note)``.
 
     ``lane`` is ``"device"`` or ``"non_device"``. ``triggering_paths`` lists the
-    changed files that forced the device lane (for an actionable message).
+    changed files that forced the device lane (for an actionable message);
+    ``changed`` is the full changed-file list (for the dependency check).
     Fail-safe: any inability to determine the lane yields ``"device"``.
     """
     repo = os.environ.get("REPO", "").strip()
@@ -402,28 +456,37 @@ def determine_lane():
     base_ref = os.environ.get("BASE_REF", "").strip()
 
     if not (repo and pr_number):
-        return "device", [], "PR context unavailable; defaulting to the device (full) path."
+        return "device", [], [], "PR context unavailable; defaulting to the device (full) path."
     try:
         changed = fetch_changed_files(repo, pr_number)
         globs = fetch_non_device_globs(repo, base_ref) if base_ref else []
     except Exception as exc:  # noqa: BLE001 — any API failure must fail safe to device
-        return "device", [], f"Could not determine lane from changed paths ({exc}); defaulting to the device (full) path."
+        return "device", [], [], f"Could not determine lane from changed paths ({exc}); defaulting to the device (full) path."
 
     if not changed:
-        return "device", [], "No changed files reported; defaulting to the device (full) path."
+        return "device", [], [], "No changed files reported; defaulting to the device (full) path."
     triggering = device_paths(changed, globs)
     if triggering:
-        return "device", triggering, ""
+        return "device", triggering, changed, ""
     actor = os.environ.get("PR_ACTOR", "").strip()
     note = f"Whitelisted actor ({actor}); auto-approved." if is_whitelisted(actor) else ""
-    return "non_device", [], note
+    return "non_device", [], changed, note
 
 
 def main():
     body = os.environ.get("PR_BODY")
     actor = os.environ.get("PR_ACTOR", "")
-    lane, triggering, note = determine_lane()
+    lane, triggering, changed, note = determine_lane()
     errors = validate(body) if lane == "device" else validate_light(body, actor)
+
+    dep_mode = os.environ.get("DEPENDENCY_CHECK_MODE", "warn").strip().lower()
+    dep_warnings = []
+    if lane == "device":
+        dep_messages = validate_new_dependencies(body, dependency_manifest_paths(changed))
+        if dep_mode == "fail":
+            errors.extend(dep_messages)
+        else:
+            dep_warnings = dep_messages
 
     lane_label = "device (full template)" if lane == "device" else "non-device (light)"
     summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
@@ -443,6 +506,8 @@ def main():
                 if len(triggering) > 20:
                     handle.write(f"- …and {len(triggering) - 20} more\n")
                 handle.write("\n")
+            for warning in dep_warnings:
+                handle.write(f"⚠️ {warning}\n\n")
             if errors:
                 handle.write("Failed checks:\n\n")
                 for error in errors:
@@ -457,6 +522,9 @@ def main():
         if len(triggering) > 10:
             shown += f", and {len(triggering) - 10} more"
         print(f"::notice::Device path triggered by: {shown}")
+
+    for warning in dep_warnings:
+        print(f"::warning::{warning}")
 
     if errors:
         for error in errors:
