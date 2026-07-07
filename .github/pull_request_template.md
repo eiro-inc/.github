@@ -44,6 +44,18 @@ you changed: everything is device unless carved out in `.github/thorne-lanes.yml
 - [ ] N/A
 - [ ] TBD / blocked until resolved
 
+## New Dependencies
+
+<!-- Required whenever this PR changes a dependency manifest or lockfile
+     (package.json / lockfiles, Cargo.toml/.lock, gradle files, Package.swift/.resolved).
+     One line per NEW or UPGRADED dependency:
+       name@version — runtime|dev — device path? — purpose — license — maintenance note — known CVEs/advisories checked
+     If the manifest change introduces no new/upgraded dependency, say why:
+       "None — lockfile refresh only, no dependency changes."
+     Internal @eiro/* packages count. (CMP §10) -->
+
+- None
+
 ## Verification
 
 <!-- State what was checked and where evidence lives. -->

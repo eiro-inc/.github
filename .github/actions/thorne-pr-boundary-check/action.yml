@@ -1,6 +1,16 @@
 name: Thorne PR Boundary Check
 description: Validate Thorne pull-request template boundary declarations (scope, DHF trace, safety class, boundary confirmations).
 
+inputs:
+  dependency-check-mode:
+    description: >-
+      How to treat a changed dependency manifest with no substantive
+      "## New Dependencies" declaration: "warn" annotates, "fail" blocks.
+      Any other value fails the check (a misconfigured gate is loud, never
+      silently lax).
+    required: false
+    default: warn
+
 runs:
   using: composite
   steps:
@@ -13,4 +23,5 @@ runs:
         REPO: ${{ github.repository }}
         PR_NUMBER: ${{ github.event.pull_request.number }}
         BASE_REF: ${{ github.event.pull_request.base.ref }}
+        DEPENDENCY_CHECK_MODE: ${{ inputs.dependency-check-mode }}
       run: python3 "${GITHUB_ACTION_PATH}/thorne_pr_boundary_check.py"
