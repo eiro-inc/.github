@@ -232,10 +232,10 @@ def test_determine_lane_fails_safe_when_no_changed_files(monkeypatch):
     monkeypatch.setattr("thorne_pr_boundary_check.fetch_changed_files", lambda repo, pr: [])
     monkeypatch.setattr("thorne_pr_boundary_check.fetch_non_device_globs", lambda repo, ref: ["docs/**"])
 
-    lane, triggering, changed, note = determine_lane()
+    lane, triggering, note = determine_lane()
 
     assert lane == "device"
-    assert triggering == []
+    assert triggering is None  # unknown, not empty: the dependency check must not silently pass
     assert "No changed files reported" in note
 
 
@@ -343,9 +343,51 @@ def test_filled_org_template_passes_device_validation():
 # --- New Dependencies (CMP §10) conditional check ---
 
 from thorne_pr_boundary_check import (  # noqa: E402
+    DEPENDENCY_CHECK_UNAVAILABLE,
     dependency_manifest_paths,
+    determine_lane,
     validate_new_dependencies,
 )
+
+
+def test_untouched_org_template_fails_dependency_check():
+    # Regression: the template's multi-line HTML comment must not count as a
+    # substantive declaration (per-line stripping leaked its inner lines).
+    assert validate_new_dependencies(_org_template(), ["package.json"])
+
+
+def test_multiline_comment_alone_is_not_substantive():
+    body = "## New Dependencies\n\n<!-- line one\n     line two\n     line three -->\n\n- None\n"
+    assert validate_new_dependencies(body, ["package.json"])
+
+
+def test_decorated_bare_none_variants_fail():
+    for none_variant in ("*None*", "- None -", "None!", "none.", "_None_"):
+        body = f"## New Dependencies\n\n{none_variant}\n"
+        assert validate_new_dependencies(body, ["package.json"]), none_variant
+
+
+def test_unknown_changed_files_reports_check_unavailable():
+    # Fail-safe polarity: unknown changed files must not silently pass (None
+    # sentinel from determine_lane's fallback paths), even with no body issue.
+    messages = validate_new_dependencies("## New Dependencies\n\nfoo@1 — runtime\n", None)
+    assert messages == [DEPENDENCY_CHECK_UNAVAILABLE]
+
+
+def test_python_and_go_manifests_match():
+    hits = dependency_manifest_paths(
+        ["svc/pyproject.toml", "svc/requirements-dev.txt", "tool/go.mod", "tool/go.sum", "a/uv.lock"]
+    )
+    assert len(hits) == 5
+
+
+def test_determine_lane_without_pr_context_reports_unknown_files(monkeypatch):
+    for var in ("REPO", "PR_NUMBER", "BASE_REF"):
+        monkeypatch.delenv(var, raising=False)
+    lane, triggering, note = determine_lane()
+    assert lane == "device"
+    assert triggering is None
+    assert note
 
 
 def test_dependency_manifest_paths_matches_all_ecosystems():

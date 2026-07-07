@@ -136,10 +136,16 @@ def present_items(section_text):
 
 
 def substantive_text(section_text):
-    """Section text with HTML comments and checkbox lines removed."""
+    """Section text with HTML comments and checkbox lines removed.
+
+    Comments are stripped across the whole section first (DOTALL) so a
+    multi-line template comment does not leak its inner lines as substantive
+    text; the per-line pass then drops blanks and checkbox lines.
+    """
+    without_comments = re.sub(r"<!--.*?-->", "", section_text, flags=re.DOTALL)
     cleaned = []
-    for line in section_text.splitlines():
-        line = re.sub(r"<!--.*?-->", "", line).strip()
+    for line in without_comments.splitlines():
+        line = line.strip()
         if not line:
             continue
         if line.startswith("- ["):
@@ -151,6 +157,10 @@ def substantive_text(section_text):
 NEW_DEPENDENCIES_SECTION = "New Dependencies"
 
 # Files whose change means the PR touches the dependency set (CMP §10).
+# Covers the ecosystems of the current device repos (npm, Cargo, Gradle,
+# SwiftPM) plus Python and Go so a future runtime dependency in those
+# ecosystems does not sail through unmatched. A new ecosystem's manifest
+# names are added here deliberately, with a matching test.
 _DEPENDENCY_MANIFEST_NAMES = {
     "package.json",
     "package-lock.json",
@@ -162,8 +172,14 @@ _DEPENDENCY_MANIFEST_NAMES = {
     "libs.versions.toml",
     "Package.swift",
     "Package.resolved",
+    "pyproject.toml",
+    "poetry.lock",
+    "uv.lock",
+    "go.mod",
+    "go.sum",
 }
 _DEPENDENCY_MANIFEST_SUFFIXES = (".gradle", ".gradle.kts")
+_DEPENDENCY_MANIFEST_RES = (re.compile(r"^requirements[^/]*\.txt$"),)
 
 
 def dependency_manifest_paths(changed_files):
@@ -171,23 +187,47 @@ def dependency_manifest_paths(changed_files):
     hits = []
     for path in changed_files:
         base = path.rsplit("/", 1)[-1]
-        if base in _DEPENDENCY_MANIFEST_NAMES or base.endswith(_DEPENDENCY_MANIFEST_SUFFIXES):
+        if (
+            base in _DEPENDENCY_MANIFEST_NAMES
+            or base.endswith(_DEPENDENCY_MANIFEST_SUFFIXES)
+            or any(pattern.match(base) for pattern in _DEPENDENCY_MANIFEST_RES)
+        ):
             hits.append(path)
     return hits
+
+
+DEPENDENCY_CHECK_UNAVAILABLE = (
+    "The PR's changed files could not be determined, so the CMP §10 New "
+    "Dependencies check could not run. Re-run the check; if the failure "
+    "persists, verify the '## New Dependencies' declaration manually."
+)
 
 
 def validate_new_dependencies(body, manifest_hits):
     """CMP §10: a manifest change requires a substantive New Dependencies declaration.
 
+    ``manifest_hits`` is the manifest/lockfile subset of the PR's *device-lane
+    triggering paths* (files not carved out as non-device). CMP §10's
+    identification duty follows the CMP's device-configuration scope (CMP §2,
+    §4.1): a manifest wholly under a non-device carve-out is outside the device
+    configuration and does not demand a declaration, and a carved-out manifest
+    riding along in a device-lane PR does not trigger one either.
+
+    ``manifest_hits is None`` means the changed files are *unknown* (lane
+    fail-safe paths) — the check reports that it could not run rather than
+    passing silently.
+
     A bare "None" is rejected when manifests changed — say *why* the change
     introduces no new/upgraded dependency (e.g. "None — lockfile refresh only").
     """
+    if manifest_hits is None:
+        return [DEPENDENCY_CHECK_UNAVAILABLE]
     if not manifest_hits:
         return []
     parsed = sections(body or "")
     text = substantive_text(parsed.get(normalize_heading(NEW_DEPENDENCIES_SECTION), ""))
-    bare = text.lower().lstrip("-* ").strip()
-    if text and bare not in {"none", "none."}:
+    bare = text.lower().strip("-*_ .!\t")
+    if text and bare != "none":
         return []
     shown = ", ".join(f"`{path}`" for path in manifest_hits[:5])
     if len(manifest_hits) > 5:
@@ -196,8 +236,9 @@ def validate_new_dependencies(body, manifest_hits):
         "Dependency manifests changed (" + shown + ") but '## New Dependencies' "
         "has no substantive declaration. List each new or upgraded dependency "
         "(name@version — runtime|dev — device path? — purpose — license — "
-        "maintenance note), or state why none is introduced "
-        "(e.g. 'None — lockfile refresh only, no dependency changes'). Per CMP §10."
+        "maintenance note — known CVEs/advisories checked), or state why none "
+        "is introduced (e.g. 'None — lockfile refresh only, no dependency "
+        "changes'). Per CMP §10."
     ]
 
 
@@ -447,42 +488,51 @@ def determine_lane():
     """Return ``(lane, triggering_paths, note)``.
 
     ``lane`` is ``"device"`` or ``"non_device"``. ``triggering_paths`` lists the
-    changed files that forced the device lane (for an actionable message);
-    ``changed`` is the full changed-file list (for the dependency check).
-    Fail-safe: any inability to determine the lane yields ``"device"``.
+    changed files that forced the device lane (for an actionable message, and
+    as the input to the CMP §10 dependency check). ``triggering_paths is None``
+    means the changed files could not be determined (fail-safe paths): the lane
+    falls back to ``"device"``, and downstream consumers must treat the file
+    list as *unknown*, not empty. Fail-safe: any inability to determine the
+    lane yields ``"device"``.
     """
     repo = os.environ.get("REPO", "").strip()
     pr_number = os.environ.get("PR_NUMBER", "").strip()
     base_ref = os.environ.get("BASE_REF", "").strip()
 
     if not (repo and pr_number):
-        return "device", [], [], "PR context unavailable; defaulting to the device (full) path."
+        return "device", None, "PR context unavailable; defaulting to the device (full) path."
     try:
         changed = fetch_changed_files(repo, pr_number)
         globs = fetch_non_device_globs(repo, base_ref) if base_ref else []
     except Exception as exc:  # noqa: BLE001 — any API failure must fail safe to device
-        return "device", [], [], f"Could not determine lane from changed paths ({exc}); defaulting to the device (full) path."
+        return "device", None, f"Could not determine lane from changed paths ({exc}); defaulting to the device (full) path."
 
     if not changed:
-        return "device", [], [], "No changed files reported; defaulting to the device (full) path."
+        return "device", None, "No changed files reported; defaulting to the device (full) path."
     triggering = device_paths(changed, globs)
     if triggering:
-        return "device", triggering, changed, ""
+        return "device", triggering, ""
     actor = os.environ.get("PR_ACTOR", "").strip()
     note = f"Whitelisted actor ({actor}); auto-approved." if is_whitelisted(actor) else ""
-    return "non_device", [], changed, note
+    return "non_device", [], note
 
 
 def main():
     body = os.environ.get("PR_BODY")
     actor = os.environ.get("PR_ACTOR", "")
-    lane, triggering, changed, note = determine_lane()
+    lane, triggering, note = determine_lane()
     errors = validate(body) if lane == "device" else validate_light(body, actor)
 
     dep_mode = os.environ.get("DEPENDENCY_CHECK_MODE", "warn").strip().lower()
+    if dep_mode not in {"warn", "fail"}:
+        errors.append(
+            f"Invalid dependency-check-mode '{dep_mode}'; use 'warn' or 'fail'."
+        )
+        dep_mode = "fail"  # a misconfigured gate must be loud, not silently lax
     dep_warnings = []
     if lane == "device":
-        dep_messages = validate_new_dependencies(body, dependency_manifest_paths(changed))
+        manifest_hits = dependency_manifest_paths(triggering) if triggering is not None else None
+        dep_messages = validate_new_dependencies(body, manifest_hits)
         if dep_mode == "fail":
             errors.extend(dep_messages)
         else:

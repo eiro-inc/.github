@@ -6,6 +6,8 @@ inputs:
     description: >-
       How to treat a changed dependency manifest with no substantive
       "## New Dependencies" declaration: "warn" annotates, "fail" blocks.
+      Any other value fails the check (a misconfigured gate is loud, never
+      silently lax).
     required: false
     default: warn
 
