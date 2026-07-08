@@ -142,6 +142,56 @@ def test_not_thorne_combined_with_device_fails():
     assert any("Not Thorne-related" in e for e in validate(body))
 
 
+# --- Whitespace tolerance: wording matches regardless of spacing ---
+
+def test_extra_whitespace_in_checklist_items_still_matches():
+    # Double spaces and tabs inside an item must not break the match: the gate
+    # keys on wording, not exact spacing.
+    body = make_body(["Device function"], ["Class B"], MANDATORY_BOUNDARY_ITEMS, "DDS §5")
+    body = body.replace("- [x] Class B", "- [x] Class  B")
+    body = body.replace("- [x] Device function", "- [x] Device\tfunction")
+    assert validate(body) == []
+
+
+def test_reflowed_boundary_item_still_confirmed():
+    # A long boundary sentence that picked up an extra space still counts as
+    # confirmed once whitespace is collapsed.
+    body = make_body(["Non-device function"], boundary_checked=MANDATORY_BOUNDARY_ITEMS, dhf_trace="<!-- n/a -->")
+    original = MANDATORY_BOUNDARY_ITEMS[0]
+    body = body.replace(original, original.replace(" ", "  ", 1))
+    assert validate(body) == []
+
+
+def test_extra_whitespace_in_heading_still_discovered():
+    body = make_body(["Non-device function"], boundary_checked=MANDATORY_BOUNDARY_ITEMS, dhf_trace="<!-- n/a -->")
+    body = body.replace("## Reviewer Notes", "##   Reviewer   Notes")
+    assert validate(body) == []
+
+
+def test_indented_heading_does_not_hijack_real_section():
+    # An indented ``## Thorne Boundary Check`` (e.g. a template example inside
+    # Reviewer Notes) is list-continuation text, not a heading. It must not
+    # overwrite the real section: a body whose real Boundary Check is missing a
+    # mandatory confirmation still fails, even when a fully-ticked indented
+    # duplicate follows it.
+    body = make_body(
+        ["Non-device function"],
+        boundary_checked=MANDATORY_BOUNDARY_ITEMS[:-1],  # real section left incomplete
+        dhf_trace="<!-- n/a -->",
+    )
+    decoy = "   ## Thorne Boundary Check\n\n" + _checklist(ALL_BOUNDARY_ITEMS, ALL_BOUNDARY_ITEMS)
+    body = f"{body}\n\n{decoy}"
+    assert any("must confirm boundary item" in e for e in validate(body))
+
+
+def test_nbsp_after_hashes_is_not_a_heading():
+    # ``##`` + non-breaking space renders as plain text on GitHub, not a
+    # heading, so it must not satisfy the required-section check (fail-open).
+    body = make_body(["Non-device function"], boundary_checked=MANDATORY_BOUNDARY_ITEMS, dhf_trace="<!-- n/a -->")
+    body = body.replace("## Reviewer Notes", "##\u00a0Reviewer Notes")
+    assert any("Missing required section: ## Reviewer Notes" == e for e in validate(body))
+
+
 # --- Lane detection: parsing thorne-lanes.yml ---
 
 def test_parse_non_device_globs_block_list():

@@ -43,47 +43,75 @@ REQUIRED_SECTIONS = [
     "Reviewer Notes",
 ]
 
-THORNE_SCOPE_ITEMS = {
-    "Device function",
-    "Non-device function",
-    "Multiple-Function impact assessment",
-    "Pre-design scaffolding under CMP §7",
-    "DHF/QMS artifact",
-    "Not Thorne-related",
-}
 
-SAFETY_CLASS_ITEMS = {
+def collapse_whitespace(text):
+    """Collapse internal whitespace runs to a single space and trim.
+
+    Template text copied between editors picks up double spaces, tabs, and
+    non-breaking spaces. Collapsing every whitespace run to a single space lets
+    a respaced heading or checklist item still match its canonical form, so the
+    gate keys on wording rather than exact spacing. (Callers apply this per
+    physical line, so a hard line wrap *inside* a single checklist item is not
+    joined — that stays a mismatch, which fails closed.)
+    """
+    return re.sub(r"\s+", " ", text or "").strip()
+
+
+# Every item constant below is normalized through collapse_whitespace at
+# definition, and the PR-body side is normalized by checked_items/present_items.
+# Both sides of every comparison are therefore canonical by construction, so no
+# compare site re-normalizes and a future reflow of a long constant can't
+# silently make the gate stop firing.
+SCOPE_DEVICE_FUNCTION = collapse_whitespace("Device function")
+SCOPE_NON_DEVICE_FUNCTION = collapse_whitespace("Non-device function")
+SCOPE_MULTI_FUNCTION = collapse_whitespace("Multiple-Function impact assessment")
+SCOPE_PRE_DESIGN = collapse_whitespace("Pre-design scaffolding under CMP §7")
+SCOPE_DHF_ARTIFACT = collapse_whitespace("DHF/QMS artifact")
+SCOPE_NOT_THORNE = collapse_whitespace("Not Thorne-related")
+
+THORNE_SCOPE_ITEMS = frozenset({
+    SCOPE_DEVICE_FUNCTION,
+    SCOPE_NON_DEVICE_FUNCTION,
+    SCOPE_MULTI_FUNCTION,
+    SCOPE_PRE_DESIGN,
+    SCOPE_DHF_ARTIFACT,
+    SCOPE_NOT_THORNE,
+})
+
+SAFETY_NA = collapse_whitespace("N/A")
+SAFETY_CLASS_ITEMS = frozenset(map(collapse_whitespace, (
     "Class A",
     "Class B",
     "Class C",
     "C-adjacent integrity control",
     "N/A",
     "TBD / blocked until resolved",
-}
+)))
 
-# Boundary confirmations every Thorne-related PR must make.
-MANDATORY_BOUNDARY_ITEMS = [
+# Boundary confirmations every Thorne-related PR must make. Tuples (order is the
+# error-message order); each element is normalized at definition.
+MANDATORY_BOUNDARY_ITEMS = tuple(map(collapse_whitespace, (
     "This PR does not introduce Eiro-authored clinical interpretation.",
     "This PR does not introduce safety detection, safety flagging, triage, crisis prediction, priority ranking, patient-status assignment, or treatment recommendation.",
     "This PR does not introduce PHQ-9 item 9 default alerting, urgent notification, 24-hour, push, or on-call alert behavior.",
     "This PR does not change the meaning, priority, salience, or safety significance of device output from a non-device surface.",
-]
+)))
 
 # Boundary confirmations required only for the scope that triggers them.
-PRE_DESIGN_BOUNDARY_ITEMS = [
+PRE_DESIGN_BOUNDARY_ITEMS = tuple(map(collapse_whitespace, (
     "If this is pre-design scaffolding, it stays within CMP §7 and does not implement clinical device behavior.",
-]
+)))
 
 # Full set the template renders (used for checklist-completeness validation).
 ALL_BOUNDARY_ITEMS = MANDATORY_BOUNDARY_ITEMS + PRE_DESIGN_BOUNDARY_ITEMS
 
 # Scopes for which a substantive DHF Trace is mandatory.
-DHF_TRACE_REQUIRED_SCOPES = {
-    "Device function",
-    "Multiple-Function impact assessment",
-    "Pre-design scaffolding under CMP §7",
-    "DHF/QMS artifact",
-}
+DHF_TRACE_REQUIRED_SCOPES = frozenset({
+    SCOPE_DEVICE_FUNCTION,
+    SCOPE_MULTI_FUNCTION,
+    SCOPE_PRE_DESIGN,
+    SCOPE_DHF_ARTIFACT,
+})
 
 # A DHF Trace is substantive when it cites at least one recognizable DHF/QMS
 # anchor. The vocabulary covers the DHF document-ID families named in the PR
@@ -102,15 +130,23 @@ ANCHOR_RE = re.compile(
 
 
 def normalize_heading(text):
-    return text.strip().lower()
+    return collapse_whitespace(text).lower()
 
 
 def sections(markdown):
     """Map normalized ``## heading`` -> section body text."""
     found = {}
-    matches = list(re.finditer(r"(?m)^##\s+(.+?)\s*$", markdown))
+    # ATX headings only at column 0, with a literal space or tab after ``##``.
+    # Deliberately stricter than CommonMark's 0-3 leading spaces: an indented
+    # ``##`` line is list-continuation text, not a heading, and honoring it would
+    # let an example heading inside Reviewer Notes overwrite (last-wins) the real
+    # section and pass a PR that confirmed nothing. ``[ \t]`` (not ``\s``) so a
+    # bare ``##`` before a newline, or ``##`` + non-breaking space — which GitHub
+    # renders as plain text, not a heading — cannot forge a required section.
+    # Known gap (pre-existing): ``## X`` inside a fenced code block still parses.
+    matches = list(re.finditer(r"(?m)^##[ \t]+(.+?)[ \t]*$", markdown))
     for index, match in enumerate(matches):
-        title = match.group(1).strip()
+        title = match.group(1)
         start = match.end()
         end = matches[index + 1].start() if index + 1 < len(matches) else len(markdown)
         found[normalize_heading(title)] = markdown[start:end].strip()
@@ -122,7 +158,7 @@ def checked_items(section_text):
     for line in section_text.splitlines():
         match = re.match(r"^\s*-\s+\[[xX]\]\s+(.+?)\s*$", line)
         if match:
-            checked.add(match.group(1).strip())
+            checked.add(collapse_whitespace(match.group(1)))
     return checked
 
 
@@ -131,7 +167,7 @@ def present_items(section_text):
     for line in section_text.splitlines():
         match = re.match(r"^\s*-\s+\[[ xX]\]\s+(.+?)\s*$", line)
         if match:
-            present.add(match.group(1).strip())
+            present.add(collapse_whitespace(match.group(1)))
     return present
 
 
@@ -258,7 +294,7 @@ def validate(body):
     checkbox_expected = {
         "Thorne Scope": THORNE_SCOPE_ITEMS,
         "Safety Class": SAFETY_CLASS_ITEMS,
-        "Thorne Boundary Check": set(ALL_BOUNDARY_ITEMS),
+        "Thorne Boundary Check": frozenset(ALL_BOUNDARY_ITEMS),
     }
     for section, expected in checkbox_expected.items():
         text = parsed.get(normalize_heading(section), "")
@@ -274,8 +310,8 @@ def validate(body):
     safety_checked = checked_items(parsed.get(normalize_heading("Safety Class"), ""))
     boundary_checked = checked_items(parsed.get(normalize_heading("Thorne Boundary Check"), ""))
 
-    thorne_scopes = scope_checked - {"Not Thorne-related"}
-    not_thorne = "Not Thorne-related" in scope_checked
+    thorne_scopes = scope_checked - {SCOPE_NOT_THORNE}
+    not_thorne = SCOPE_NOT_THORNE in scope_checked
     if not scope_checked:
         errors.append("Select at least one Thorne Scope item.")
     if not_thorne and thorne_scopes:
@@ -290,8 +326,8 @@ def validate(body):
                     "(e.g., DDS §5, ADR-0002, SRS-02-04, CMP §7) for this Thorne-scoped PR."
                 )
 
-        if "Device function" in scope_checked:
-            non_na_safety = safety_checked - {"N/A"}
+        if SCOPE_DEVICE_FUNCTION in scope_checked:
+            non_na_safety = safety_checked - {SAFETY_NA}
             if not non_na_safety:
                 errors.append(
                     "Device-function PRs must select at least one Safety Class item other than N/A."
@@ -301,7 +337,7 @@ def validate(body):
             if item not in boundary_checked:
                 errors.append(f"Thorne-related PRs must confirm boundary item: {item}")
 
-        if "Pre-design scaffolding under CMP §7" in scope_checked:
+        if SCOPE_PRE_DESIGN in scope_checked:
             for item in PRE_DESIGN_BOUNDARY_ITEMS:
                 if item not in boundary_checked:
                     errors.append(f"Pre-design scaffolding PRs must confirm boundary item: {item}")
