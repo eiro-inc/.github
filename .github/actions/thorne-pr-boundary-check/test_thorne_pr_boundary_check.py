@@ -164,13 +164,31 @@ def test_reflowed_boundary_item_still_confirmed():
 def test_extra_whitespace_in_heading_still_discovered():
     body = make_body(["Non-device function"], boundary_checked=MANDATORY_BOUNDARY_ITEMS, dhf_trace="<!-- n/a -->")
     body = body.replace("## Reviewer Notes", "##   Reviewer   Notes")
-    assert not any("Reviewer Notes" in e for e in validate(body))
+    assert validate(body) == []
 
 
-def test_indented_heading_still_discovered():
+def test_indented_heading_does_not_hijack_real_section():
+    # An indented ``## Thorne Boundary Check`` (e.g. a template example inside
+    # Reviewer Notes) is list-continuation text, not a heading. It must not
+    # overwrite the real section: a body whose real Boundary Check is missing a
+    # mandatory confirmation still fails, even when a fully-ticked indented
+    # duplicate follows it.
+    body = make_body(
+        ["Non-device function"],
+        boundary_checked=MANDATORY_BOUNDARY_ITEMS[:-1],  # real section left incomplete
+        dhf_trace="<!-- n/a -->",
+    )
+    decoy = "   ## Thorne Boundary Check\n\n" + _checklist(ALL_BOUNDARY_ITEMS, ALL_BOUNDARY_ITEMS)
+    body = f"{body}\n\n{decoy}"
+    assert any("must confirm boundary item" in e for e in validate(body))
+
+
+def test_nbsp_after_hashes_is_not_a_heading():
+    # ``##`` + non-breaking space renders as plain text on GitHub, not a
+    # heading, so it must not satisfy the required-section check (fail-open).
     body = make_body(["Non-device function"], boundary_checked=MANDATORY_BOUNDARY_ITEMS, dhf_trace="<!-- n/a -->")
-    body = body.replace("## Reviewer Notes", "   ## Reviewer Notes")
-    assert not any("Missing required section: ## Reviewer Notes" == e for e in validate(body))
+    body = body.replace("## Reviewer Notes", "##\u00a0Reviewer Notes")
+    assert any("Missing required section: ## Reviewer Notes" == e for e in validate(body))
 
 
 # --- Lane detection: parsing thorne-lanes.yml ---
