@@ -16,10 +16,9 @@ body:
       options:
         - thorne-core
         - thorne-backend
-        - thorne-clinician-web
         - thorne-patient-ios
         - thorne-patient-android
-        - thorne-patient-web
+        - thorne-web
         - thorne-dhf
         - thorne-product
     validations:
