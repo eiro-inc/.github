@@ -44,6 +44,30 @@ you changed: everything is device unless carved out in `.github/thorne-lanes.yml
 - [ ] N/A
 - [ ] TBD / blocked until resolved
 
+## Verification Tests
+
+<!-- One line per verification test ADDED or CHANGED in this PR, with its
+     @verifies target(s):
+       test_offline_sync_no_loss — @verifies SRS-01-04
+     If this PR adds or changes tests that are NOT verification evidence,
+     say so: "Non-verification tests only."
+     If no tests changed: "None." -->
+
+- None
+
+## SDD Deviation
+
+<!-- Does this implementation deviate from the SDD as written (component
+     boundaries, interfaces, behavior described in SDD sections)?
+     Deviation is not a nitpick — it is a design-change trigger (SOP-003 §13)
+     and must be visible before merge.
+       No.
+     or
+       Yes — SDD-09 describes X; this implements Y because Z. Flagged to Design Owner.
+     -->
+
+- No
+
 ## New Dependencies
 
 <!-- Required whenever this PR changes a dependency manifest or lockfile
