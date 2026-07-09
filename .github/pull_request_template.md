@@ -46,12 +46,20 @@ you changed: everything is device unless carved out in `.github/thorne-lanes.yml
 
 ## Verification Tests
 
-<!-- One line per verification test ADDED or CHANGED in this PR, with its
-     @verifies target(s):
+<!-- One line per verification test ADDED, CHANGED, or REMOVED in this PR,
+     with its @verifies target(s). A verification test is one that confirms
+     an SRS requirement (VVP-01 §6.8): it carries the @verifies tag and is
+     CI-harvested into the TRM.
        test_offline_sync_no_loss — @verifies SRS-01-04
-     If this PR adds or changes tests that are NOT verification evidence,
-     say so: "Non-verification tests only."
-     If no tests changed: "None." -->
+       removed test_old_sync — @verifies SRS-01-04; re-covered by test_offline_sync_no_loss
+     Removing, renaming, or disabling a tagged test orphans a TRM row's
+     evidence — always list it and say how the requirement stays covered.
+     If the PR also touches tests that are NOT verification evidence, they
+     need not be listed ("plus non-verification tests" suffices).
+     If ONLY non-verification tests changed: "Non-verification tests only."
+     If no tests changed: "None."
+     (The ## Verification checklist below records HOW this PR was verified;
+     this section records WHICH requirement-tagged tests changed.) -->
 
 - None
 
