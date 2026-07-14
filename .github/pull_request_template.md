@@ -122,8 +122,11 @@ ACCESSIBILITY SECTION ↓  — only required if this PR changes user-facing UI.
 This cuts a DIFFERENT axis from the device lane above: it applies to any UI
 change (device or non-device) and not at all to non-UI changes. Baseline
 standard: WCAG 2.2 AA. These are the human-judgment checks a reviewer confirms
-by hand — the machine-checkable items live in the enforcers, not here. See
-design/accessibility.md in thorne-product for the check definitions.
+by hand — the machine-checkable items live in the enforcers, not here.
+
+This section IS the source of truth for these checks — to add or change one,
+edit here. See design/accessibility.md in thorne-product for rationale, WCAG
+mapping, and context (that doc carries an illustrative example, not the home).
 
 • No user-facing UI change? Tick "N/A" below and you're done.
 • Changed UI? Tick "changes user-facing UI" and confirm each item.
