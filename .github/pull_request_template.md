@@ -114,3 +114,39 @@ you changed: everything is device unless carved out in `.github/thorne-lanes.yml
 <!-- Call out risk, traceability gaps, follow-up DHF updates, or known limitations. -->
 
 </details>
+
+<!--
+──────────────────────────────────────────────────────────────────────────
+ACCESSIBILITY SECTION ↓  — only required if this PR changes user-facing UI.
+
+This cuts a DIFFERENT axis from the device lane above: it applies to any UI
+change (device or non-device) and not at all to non-UI changes. Baseline
+standard: WCAG 2.2 AA. These are the human-judgment checks a reviewer confirms
+by hand — the machine-checkable items live in the enforcers, not here. See
+design/accessibility.md in thorne-product for the check definitions.
+
+• No user-facing UI change? Tick "N/A" below and you're done.
+• Changed UI? Tick "changes user-facing UI" and confirm each item.
+──────────────────────────────────────────────────────────────────────────
+-->
+
+<details>
+<summary><b>Accessibility</b> — fill in only for user-facing UI changes</summary>
+
+## Accessibility
+
+- [ ] This PR changes user-facing UI
+- [ ] N/A — no user-facing UI change
+
+<!-- If UI changed, confirm each item for the surfaces this PR touches (WCAG 2.2 AA): -->
+
+- [ ] **SR-01** — Every screen is operable and reads coherently under the platform screen reader (VoiceOver / TalkBack) — including status / loading / error changes being announced, not silent.
+- [ ] **SR-02** — Reading / traversal order matches the visual and logical order.
+- [ ] **CD-03** — Each image's content description conveys the information/purpose it carries — not the file name or "image".
+- [ ] **FORM-01** — Form fields have meaningful, persistent labels (not placeholder-only); validation errors clearly say what's wrong, are tied to their field, and are announced.
+- [ ] **TYPE-02** — Layout stays usable at the largest supported font setting — no clipping, overlap, or lost actions.
+- [ ] **TYPE-03** *(web)* — Content reflows without horizontal scrolling at 320 CSS px / 400% zoom.
+- [ ] **COLOR-03** — Color is never the *only* way information is conveyed (status/error/selection also carry text, icon, or shape).
+- [ ] **FOCUS-01** — All interactive elements are reachable and operable by keyboard / switch / external control with no traps, and focus is managed on route / dialog changes (moved into dialogs, restored on close).
+
+</details>
