@@ -61,11 +61,14 @@ runs:
         set -euo pipefail
         # Feed the token to git's in-memory credential cache (a short-lived
         # daemon, not a file), so it never lands on pip's argv, in the logs, or
-        # on disk. INSTALL_TOKEN is read from env and is never interpolated into
-        # the script, so its value is not echoed.
-        git config --global credential.helper 'cache --timeout=300'
-        printf 'protocol=https\nhost=github.com\nusername=x-access-token\npassword=%s\n\n' "$INSTALL_TOKEN" | git credential approve
+        # on disk. Tear the daemon down on step exit (success OR failure) via the
+        # trap, and keep the approve->install window minimal, so the token is not
+        # left retrievable by any later step in the caller's job. INSTALL_TOKEN
+        # is read from env and is never interpolated into the script.
+        git config --global credential.helper 'cache --timeout=60'
+        trap 'git credential-cache exit >/dev/null 2>&1 || true' EXIT
         python -m pip install --upgrade pip
+        printf 'protocol=https\nhost=github.com\nusername=x-access-token\npassword=%s\n\n' "$INSTALL_TOKEN" | git credential approve
         python -m pip install "git+https://github.com/eiro-inc/thorne-vv-tooling@${VVTRACE_REF}"
 
     - name: Harvest and validate trace tags, emit manifests
@@ -76,13 +79,19 @@ runs:
         HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
       run: |
         set -euo pipefail
+        # Run BOTH checks even if the first finds problems, then fail if either
+        # did — so one round surfaces both @verifies and implements: findings and
+        # emits both manifests, rather than an early @verifies failure aborting
+        # the step and hiding the SDD validation + its module manifest.
         # harvest validates @verifies (unknown-id / malformed -> non-zero exit)
         # and emits the AC3 machine-readable evidence manifest; implements does
         # the same for implements SDD-NN module declarations.
+        rc=0
         vvtrace harvest --repo "$REPO_NAME" --sha "$HEAD_SHA" --src "$SRC" \
-          --srs .thorne-dhf/02-inputs/SRS.md --out evidence-manifest.json
+          --srs .thorne-dhf/02-inputs/SRS.md --out evidence-manifest.json || rc=1
         vvtrace implements --repo "$REPO_NAME" --sha "$HEAD_SHA" --src "$SRC" \
-          --dhf .thorne-dhf --out module-manifest.json
+          --dhf .thorne-dhf --out module-manifest.json || rc=1
+        exit "$rc"
 
     - name: Upload trace manifests
       if: always()
