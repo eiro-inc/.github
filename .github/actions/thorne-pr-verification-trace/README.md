@@ -2,17 +2,19 @@
 
 Composite action that runs the read-only `vvtrace` engine against a device
 source repository's pull request, enforcing the machine-checkable trace
-conventions against the controlled DHF (ADR-0008; #113 AC1-2 — the
-`@verifies`/SRS-ID lint):
+conventions against the controlled DHF (ADR-0008; thorne-dhf#113 **AC3** — the
+`@verifies` parser/checker):
 
 - `@verifies SRS-NN-MM` tags cite requirements that **exist** in the SRS and are
-  well-formed (`vvtrace lint`);
+  well-formed (`vvtrace harvest`);
 - `implements: SDD-NN` declarations cite SDD components that **exist**
   (`vvtrace implements`).
 
-It validates only — it never writes the DHF or the TRM (ADR-0005 §7). A finding
-fails the job; the *gate* is the caller's branch protection marking the check
-required.
+It validates and **emits AC3's machine-readable manifests** — an evidence
+manifest (`@verifies`) and a module manifest (`implements:`) — uploaded as the
+`vvtrace-manifests` build artifact. It never writes the DHF or the TRM (the
+manifests are read-only evidence, ADR-0005 §7). A finding fails the job; the
+*gate* is the caller's branch protection marking the check required.
 
 Enforcement lives here (`eiro-inc/.github`), not in the engine repo, so a device
 repo's CI is not coupled to the validated-engine repo (ADR-0008 §Decision 2).
@@ -64,6 +66,8 @@ line and out of the logs.
 
 ## Scope
 
-This is the `@verifies`/SRS-ID *source* lint half of #113 AC1-2. Upgrading the
-PR-body DHF-Trace check from anchor *shape* to anchor *existence* (in the
-`thorne-pr-boundary-check` Action) is tracked separately.
+This delivers thorne-dhf#113 **AC3** — the `@verifies` parser/checker that
+validates cited SRS ids exist and emits the machine-readable manifest.
+**AC2** (the device-PR checker validating that the SRS/SDD/IFS/HAZ ids cited in
+the *PR body's* DHF Trace section actually exist) is a separate change to the
+`thorne-pr-boundary-check` Action, tracked in eiro-inc/.github#23.

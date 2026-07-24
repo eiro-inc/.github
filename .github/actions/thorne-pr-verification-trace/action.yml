@@ -1,10 +1,12 @@
 name: Thorne PR Verification-Traceability Check
 description: >-
-  Validate @verifies SRS-NN-MM tags and implements: SDD-NN declarations in the
-  source under review against the controlled DHF, using the vvtrace engine
-  (ADR-0008; #113 AC1-2, the @verifies/SRS-ID lint). Read-only: it validates and
-  fails the job on any unknown id or malformed tag. It never writes the DHF or
-  the TRM.
+  Harvest and validate @verifies SRS-NN-MM tags and implements: SDD-NN
+  declarations in the source under review against the controlled DHF, using the
+  vvtrace engine (ADR-0008; thorne-dhf#113 AC3 — the @verifies parser/checker).
+  Validates that cited SRS/SDD ids exist, emits the read-only evidence and
+  module manifests, and fails the job on any unknown id or malformed tag. It
+  never writes the DHF or the TRM (the manifests are read-only evidence,
+  ADR-0005 §7).
 
 inputs:
   src:
@@ -30,7 +32,8 @@ inputs:
     description: >-
       Token with read access to the DHF repo (and to thorne-vv-tooling while it
       is private, for the engine install) — a GitHub App installation token or
-      fine-grained PAT. Not persisted to disk and kept off pip's argv / logs.
+      fine-grained PAT. Held only in git's in-memory credential cache for the
+      install; not written to disk, pip's argv, or the logs.
     required: true
 
 runs:
@@ -56,17 +59,16 @@ runs:
         INSTALL_TOKEN: ${{ inputs.token }}
       run: |
         set -euo pipefail
-        # Keep the token off pip's argv and out of the logs: write it to a
-        # credential-store file git reads transparently, rather than inlining a
-        # credential URL. INSTALL_TOKEN is read from env (never a ${{ }}
-        # expression in the script), so its value is not echoed.
-        printf 'https://x-access-token:%s@github.com\n' "$INSTALL_TOKEN" > "$HOME/.git-credentials"
-        trap 'rm -f "$HOME/.git-credentials"' EXIT
-        git config --global credential.helper store
+        # Feed the token to git's in-memory credential cache (a short-lived
+        # daemon, not a file), so it never lands on pip's argv, in the logs, or
+        # on disk. INSTALL_TOKEN is read from env and is never interpolated into
+        # the script, so its value is not echoed.
+        git config --global credential.helper 'cache --timeout=300'
+        printf 'protocol=https\nhost=github.com\nusername=x-access-token\npassword=%s\n\n' "$INSTALL_TOKEN" | git credential approve
         python -m pip install --upgrade pip
         python -m pip install "git+https://github.com/eiro-inc/thorne-vv-tooling@${VVTRACE_REF}"
 
-    - name: "Lint @verifies tags and validate implements: declarations"
+    - name: Harvest and validate trace tags, emit manifests
       shell: bash
       env:
         SRC: ${{ inputs.src }}
@@ -74,5 +76,20 @@ runs:
         HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
       run: |
         set -euo pipefail
-        vvtrace lint --src "$SRC" --srs .thorne-dhf/02-inputs/SRS.md
-        vvtrace implements --repo "$REPO_NAME" --sha "$HEAD_SHA" --src "$SRC" --dhf .thorne-dhf
+        # harvest validates @verifies (unknown-id / malformed -> non-zero exit)
+        # and emits the AC3 machine-readable evidence manifest; implements does
+        # the same for implements SDD-NN module declarations.
+        vvtrace harvest --repo "$REPO_NAME" --sha "$HEAD_SHA" --src "$SRC" \
+          --srs .thorne-dhf/02-inputs/SRS.md --out evidence-manifest.json
+        vvtrace implements --repo "$REPO_NAME" --sha "$HEAD_SHA" --src "$SRC" \
+          --dhf .thorne-dhf --out module-manifest.json
+
+    - name: Upload trace manifests
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: vvtrace-manifests
+        path: |
+          evidence-manifest.json
+          module-manifest.json
+        if-no-files-found: ignore
