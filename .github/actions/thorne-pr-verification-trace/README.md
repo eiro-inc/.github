@@ -18,7 +18,18 @@ manifests are read-only evidence, ADR-0005 §7). A finding fails the job; the
 
 Enforcement lives here (`eiro-inc/.github`), not in the engine repo, so a device
 repo's CI is not coupled to the validated-engine repo (ADR-0008 §Decision 2).
-The Action installs the **pinned** engine at a released tag.
+The Action installs the **pinned** engine at a release commit SHA.
+
+The manifests record the commit the Action **actually scanned**, read from the
+tree rather than from the event payload. If that commit is not the event's head
+commit — the default `actions/checkout` on `pull_request` gives you the synthetic
+merge ref — the Action **fails** rather than recording provenance for a tree it
+did not scan. Check out the head commit as shown below.
+
+The controlled DHF is fetched into `$RUNNER_TEMP`, deliberately **outside**
+`$GITHUB_WORKSPACE`: `vvtrace` scans `src` recursively, so a DHF checkout inside
+the scanned tree would let DHF-resident source files be harvested and attributed
+to the repository under review.
 
 ## Usage (in a device source repo)
 
@@ -41,18 +52,23 @@ jobs:
       - uses: eiro-inc/.github/.github/actions/thorne-pr-verification-trace@main
         with:
           # src: .            # subtree to scan, if not the whole repo
-          # vvtrace-ref: v0.1.0
           token: ${{ secrets.DHF_READ_TOKEN }}
 ```
+
+The `ref:` on the checkout is **required, not advisory** — without it the Action
+fails the mismatch check described above.
 
 ## Provisioning
 
 `token` — read access to `eiro-inc/thorne-dhf` (SRS/SDD/IFS/HAZ) and, while the
 engine repo is private, to `eiro-inc/thorne-vv-tooling` for the `pip install`.
 Use a GitHub App installation token or a fine-grained PAT stored as an Actions
-secret. The token is used only for the DHF checkout and the engine install; it
-is not persisted (`persist-credentials: false`) and is kept off the pip command
-line and out of the logs.
+secret. The token is used only for the DHF fetch and the engine install, and is
+held solely in git's in-memory credential cache for that one step: it is never
+written to disk, never reaches the pip command line or the logs, and the cache
+daemon is torn down when the step exits, so it is not retrievable by later steps
+in the job. The step's git config is scoped to a throwaway `GIT_CONFIG_GLOBAL`,
+so the runner's own gitconfig is left untouched.
 
 ## Inputs
 
@@ -60,8 +76,9 @@ line and out of the logs.
 |---|---|---|
 | `src` | `.` | Path to the checked-out source to scan. |
 | `dhf-repo` | `eiro-inc/thorne-dhf` | Controlled DHF source. |
-| `dhf-ref` | `main` | DHF ref to validate against. |
-| `vvtrace-ref` | `v0.1.0` | Engine tag to install (pin; do not float to a branch). |
+| `dhf-ref` | `main` | DHF ref or commit SHA to validate against. |
+| `vvtrace-ref` | `6dcf5389…` (`v0.1.0`) | Engine **commit SHA** to install. Pin a SHA, not a tag: the engine repo has no tag protection, so a tag can move. |
+| `artifact-name` | `vvtrace-manifests` | Manifest artifact name; override if the action runs twice in one job. |
 | `token` | — (required) | Read token for the DHF and the engine repo. |
 
 ## Scope

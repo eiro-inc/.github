@@ -65,8 +65,11 @@ DHF ids that exist and be well-formed. It emits the read-only evidence and
 module manifests as a build artifact and fails CI on any finding; it never
 writes the DHF or the TRM.
 
-To use it in a repository, add this workflow (check out the PR head so the
-scanned tree matches what the PR proposes):
+To use it in a repository, add this workflow. The `ref:` on the checkout is
+required: the action records the commit it actually scanned, read from the tree,
+and fails if that is not the event's head commit — so a default checkout, which
+gives the synthetic merge ref, is rejected rather than silently producing
+evidence for a tree nobody reviewed.
 
 ```yaml
 name: Thorne Verification Traceability
@@ -89,9 +92,11 @@ jobs:
           token: ${{ secrets.DHF_READ_TOKEN }}
 ```
 
-The action installs the pinned engine (`vvtrace-ref`, default `v0.1.0`) and
-needs `token` with read access to `eiro-inc/thorne-dhf` (and, while private,
-`eiro-inc/thorne-vv-tooling`). After adding the workflow, require the
+The action installs the pinned engine (`vvtrace-ref`, defaulting to the commit
+tagged `v0.1.0`) and needs `token` with read access to `eiro-inc/thorne-dhf`
+(and, while private, `eiro-inc/thorne-vv-tooling`). It fetches the DHF into
+`$RUNNER_TEMP`, outside the workspace, so the DHF is never part of the scanned
+tree. After adding the workflow, require the
 `thorne-pr-verification-trace` status check before merge. See the action's
 [README](.github/actions/thorne-pr-verification-trace/README.md) for inputs.
 
