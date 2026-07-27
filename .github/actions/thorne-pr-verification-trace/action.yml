@@ -1,0 +1,149 @@
+name: Thorne PR Verification-Traceability Check
+description: >-
+  Harvest and validate @verifies SRS-NN-MM tags and implements: SDD-NN
+  declarations in the source under review against the controlled DHF, using the
+  vvtrace engine (ADR-0008; thorne-dhf#113 AC3 — the @verifies parser/checker).
+  Validates that cited SRS/SDD ids exist, emits the read-only evidence and
+  module manifests, and fails the job on any unknown id or malformed tag. It
+  never writes the DHF or the TRM (the manifests are read-only evidence,
+  ADR-0005 §7).
+
+inputs:
+  src:
+    description: "Path to the already-checked-out source tree to scan."
+    required: false
+    default: "."
+  dhf-repo:
+    description: "Controlled DHF repository providing SRS/SDD/IFS/HAZ."
+    required: false
+    default: "eiro-inc/thorne-dhf"
+  dhf-ref:
+    description: "Ref of the DHF to validate against."
+    required: false
+    default: "main"
+  vvtrace-ref:
+    description: >-
+      Released engine commit to install. Defaults to the commit tagged v0.1.0.
+      Pin to a commit SHA, not a tag or branch — a required gate must not change
+      behavior as a ref moves, and the engine repo has no tag protection, so a
+      tag is movable too.
+    required: false
+    default: "6dcf5389ab8fc5a5739d607dbfd4056f82bd9f4e"
+  artifact-name:
+    description: >-
+      Name of the uploaded manifest artifact. Override when a caller runs this
+      action more than once in a job (upload-artifact errors on a duplicate
+      name within a run).
+    required: false
+    default: "vvtrace-manifests"
+  token:
+    description: >-
+      Token with read access to the DHF repo (and to thorne-vv-tooling while it
+      is private, for the engine install) — a GitHub App installation token or
+      fine-grained PAT. Held only in git's in-memory credential cache for the
+      clone and install; not written to disk, pip's argv, or the logs.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    # The DHF clone and the engine install share one step on purpose: the
+    # scoped GIT_CONFIG_GLOBAL and the credential-cache daemon below do not
+    # cross step boundaries, and keeping both token consumers inside one step
+    # keeps the credential's lifetime to that step.
+    - name: Fetch controlled DHF and install vvtrace (pinned)
+      shell: bash
+      env:
+        DHF_REPO: ${{ inputs.dhf-repo }}
+        DHF_REF: ${{ inputs.dhf-ref }}
+        VVTRACE_REF: ${{ inputs.vvtrace-ref }}
+        INSTALL_TOKEN: ${{ inputs.token }}
+      run: |
+        set -euo pipefail
+        # Scope git's global config to a throwaway file for this step only. A
+        # composite action shares the caller's job and runner, so writing the
+        # real ~/.gitconfig would change credential behavior for every later
+        # step and clobber any credential.helper the caller had configured.
+        export GIT_CONFIG_GLOBAL="$RUNNER_TEMP/vvtrace-gitconfig"
+        : > "$GIT_CONFIG_GLOBAL"
+        # Feed the token to git's in-memory credential cache (a short-lived
+        # daemon, not a file), so it never lands on pip's argv, in the logs, or
+        # on disk. Tear the daemon down and drop the config on step exit
+        # (success OR failure) via the trap, so the token is not left
+        # retrievable by any later step in the caller's job. INSTALL_TOKEN is
+        # read from env and is never interpolated into the script.
+        git config --global credential.helper 'cache --timeout=60'
+        trap 'git credential-cache exit >/dev/null 2>&1 || true; rm -f "$GIT_CONFIG_GLOBAL"' EXIT
+        python -m pip install --upgrade pip
+        printf 'protocol=https\nhost=github.com\nusername=x-access-token\npassword=%s\n\n' "$INSTALL_TOKEN" | git credential approve
+
+        # Clone the DHF OUTSIDE $GITHUB_WORKSPACE. It must not live under the
+        # scanned tree: vvtrace walks --src recursively and its skip-list does
+        # not know about a DHF checkout, so a DHF-resident source file would be
+        # harvested and attributed to the repository under review. actions/
+        # checkout cannot place a repo outside the workspace (its path: input is
+        # workspace-relative), hence the explicit clone. The remote URL carries
+        # no token, so nothing credential-shaped lands in the clone's config.
+        DHF_DIR="$RUNNER_TEMP/thorne-dhf"
+        rm -rf "$DHF_DIR"
+        git init -q "$DHF_DIR"
+        git -C "$DHF_DIR" remote add origin "https://github.com/$DHF_REPO"
+        # Fetch by ref OR commit SHA, shallow: dhf-ref accepts either.
+        git -C "$DHF_DIR" fetch -q --depth 1 origin "$DHF_REF"
+        git -C "$DHF_DIR" checkout -q FETCH_HEAD
+
+        python -m pip install "git+https://github.com/eiro-inc/thorne-vv-tooling@${VVTRACE_REF}"
+
+    - name: Harvest and validate trace tags, emit manifests
+      shell: bash
+      env:
+        SRC: ${{ inputs.src }}
+        REPO_NAME: ${{ github.event.repository.name }}
+        EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      run: |
+        set -euo pipefail
+        DHF_DIR="$RUNNER_TEMP/thorne-dhf"
+
+        # Stamp the SHA that was actually scanned, derived from the tree itself
+        # rather than from the event payload. These manifests are AC3 evidence,
+        # so the recorded provenance must describe the tree that produced it.
+        # Then fail if that is not the PR head: actions/checkout defaults to the
+        # synthetic merge ref on pull_request, and evidence for a commit that
+        # exists in no branch is worse than a red X the caller can act on.
+        SCANNED_SHA="$(git -C "$SRC" rev-parse HEAD 2>/dev/null || true)"
+        if [ -z "$SCANNED_SHA" ]; then
+          echo "::error::'$SRC' is not inside a git work tree, so the scanned commit cannot be established. Check out the source with actions/checkout before this action."
+          exit 1
+        fi
+        if [ "$SCANNED_SHA" != "$EXPECTED_SHA" ]; then
+          echo "::error::Scanned tree is at $SCANNED_SHA but this event's head commit is $EXPECTED_SHA — the manifests would record provenance for a tree that was not scanned. Pass the event's head SHA as the ref: input of your actions/checkout step (see this action's README usage block)."
+          exit 1
+        fi
+
+        # Run BOTH checks even if the first finds problems, then fail if either
+        # did — so one round surfaces both @verifies and implements: findings and
+        # emits both manifests, rather than an early @verifies failure aborting
+        # the step and hiding the SDD validation + its module manifest.
+        # harvest validates @verifies (unknown-id / malformed -> non-zero exit)
+        # and emits the AC3 machine-readable evidence manifest; implements does
+        # the same for implements SDD-NN module declarations.
+        rc=0
+        vvtrace harvest --repo "$REPO_NAME" --sha "$SCANNED_SHA" --src "$SRC" \
+          --srs "$DHF_DIR/02-inputs/SRS.md" --out evidence-manifest.json || rc=1
+        vvtrace implements --repo "$REPO_NAME" --sha "$SCANNED_SHA" --src "$SRC" \
+          --dhf "$DHF_DIR" --out module-manifest.json || rc=1
+        exit "$rc"
+
+    - name: Upload trace manifests
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: |
+          evidence-manifest.json
+          module-manifest.json
+        if-no-files-found: ignore

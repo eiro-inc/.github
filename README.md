@@ -55,6 +55,51 @@ The workflow enforces:
 - Device-function PRs select at least one Safety Class item other than `N/A`.
 - Thorne-related PRs confirm the required boundary checklist items.
 
+### Thorne PR Verification-Traceability Check
+
+`.github/actions/thorne-pr-verification-trace` runs the read-only `vvtrace`
+engine against a device source repository's pull request, enforcing the
+machine-checkable trace conventions against the controlled DHF (thorne-dhf#113
+AC3): `@verifies SRS-NN-MM` tags and `implements: SDD-NN` declarations must cite
+DHF ids that exist and be well-formed. It emits the read-only evidence and
+module manifests as a build artifact and fails CI on any finding; it never
+writes the DHF or the TRM.
+
+To use it in a repository, add this workflow. The `ref:` on the checkout is
+required: the action records the commit it actually scanned, read from the tree,
+and fails if that is not the event's head commit — so a default checkout, which
+gives the synthetic merge ref, is rejected rather than silently producing
+evidence for a tree nobody reviewed.
+
+```yaml
+name: Thorne Verification Traceability
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  thorne-pr-verification-trace:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: eiro-inc/.github/.github/actions/thorne-pr-verification-trace@main
+        with:
+          token: ${{ secrets.DHF_READ_TOKEN }}
+```
+
+The action installs the pinned engine (`vvtrace-ref`, defaulting to the commit
+tagged `v0.1.0`) and needs `token` with read access to `eiro-inc/thorne-dhf`
+(and, while private, `eiro-inc/thorne-vv-tooling`). It fetches the DHF into
+`$RUNNER_TEMP`, outside the workspace, so the DHF is never part of the scanned
+tree. After adding the workflow, require the
+`thorne-pr-verification-trace` status check before merge. See the action's
+[README](.github/actions/thorne-pr-verification-trace/README.md) for inputs.
+
 ## Issue Templates
 
 The issue templates currently focus on Thorne traceability:
