@@ -1,6 +1,10 @@
 """Unit tests for the Thorne PR boundary-check validator."""
 
+import importlib.util
 import pathlib
+import re
+import sys
+import types
 import urllib.error
 
 import pytest
@@ -10,12 +14,16 @@ from thorne_pr_boundary_check import (
     MANDATORY_BOUNDARY_ITEMS,
     SAFETY_CLASS_ITEMS,
     THORNE_SCOPE_ITEMS,
+    DhfUnavailable,
     determine_lane,
     device_paths,
+    dhf_anchor_candidates,
     fetch_changed_files,
     fetch_non_device_globs,
     glob_match,
     is_whitelisted,
+    load_dhf_namespaces,
+    main,
     parse_non_device_globs,
     validate,
     validate_light,
@@ -491,3 +499,216 @@ def test_manifest_change_with_declaration_passes():
 def test_template_comment_alone_is_not_substantive():
     body = "## New Dependencies\n\n<!-- list deps here -->\n"
     assert validate_new_dependencies(body, ["package.json"])
+
+
+# --- DHF Trace anchor existence (thorne-dhf#113 AC2, issue #23) --------------
+
+
+class FakeNamespaces:
+    """Stand-in for ``vvtrace.namespaces.DhfNamespaces``.
+
+    Mirrors the engine's id shapes (two-digit, zero-padded — the DHF uses no
+    other form) so these tests run without the private engine installed. The
+    real ``DhfNamespaces`` is exercised by the integration test below, which
+    skips when the engine is absent.
+    """
+
+    EXISTING = frozenset(
+        {"SRS-02-04", "SRS-02", "SDD-01", "ARC-02", "IFS-09-01", "IFS-09", "HAZ-26"}
+    )
+    SHAPES = (
+        (r"SRS-\d{2}-\d{2}", "srs"),
+        (r"IFS-\d{2}-\d{2}[a-z]?", "ifs"),
+        (r"SDD-\d{2}", "sdd"),
+        (r"ARC-\d{2}", "arc"),
+        (r"IFS-\d{2}", "ifs-category"),
+        (r"SRS-\d{2}", "srs-category"),
+        (r"HAZ-\d{2}", "haz"),
+    )
+
+    def kind(self, anchor):
+        for pattern, name in self.SHAPES:
+            if re.fullmatch(pattern, anchor):
+                return name
+        return None
+
+    def is_valid(self, anchor):
+        return self.kind(anchor) is not None and anchor in self.EXISTING
+
+
+def _device_body(trace):
+    return make_body(["Device function"], ["Class B"], MANDATORY_BOUNDARY_ITEMS, trace)
+
+
+def test_existing_dhf_ids_pass_the_existence_check():
+    body = _device_body("Traces to SRS-02-04, SDD-01, HAZ-26.")
+    assert validate(body, FakeNamespaces()) == []
+
+
+def test_nonexistent_but_well_shaped_id_fails():
+    body = _device_body("Traces to SRS-77-77.")
+    errors = validate(body, FakeNamespaces())
+    assert any("SRS-77-77" in e and "does not exist" in e for e in errors), errors
+
+
+def test_nonexistent_id_passes_the_shape_only_check():
+    """The gap AC2 closes: shape alone accepts an id that does not exist."""
+    body = _device_body("Traces to SRS-77-77.")
+    assert validate(body) == []
+
+
+def test_malformed_id_of_a_checkable_family_is_reported():
+    # The DHF writes zero-padded two-digit ids exclusively; HAZ-3 is not a real
+    # id, and the engine cannot classify it. Report rather than silently skip.
+    body = _device_body("Traces to HAZ-3.")
+    errors = validate(body, FakeNamespaces())
+    assert any("HAZ-3" in e and "well-formed" in e for e in errors), errors
+
+
+def test_uncheckable_families_are_never_flagged():
+    """The regression that would fail nearly every Thorne PR.
+
+    ADR/CMP/DDS/TRM/SOP/§/CFR have no DHF namespace loader, so they must pass
+    through untouched rather than being reported as unrecognized anchors.
+    """
+    for trace in (
+        "DDS §5",
+        "ADR-0002",
+        "CMP §7",
+        "SOP-013 §15",
+        "TRM",
+        "UNS-12",
+        "21 CFR 820.30(g)",
+        "ISO 14971",
+        "VVP-01 and DR-02",
+    ):
+        body = _device_body(trace)
+        assert validate(body, FakeNamespaces()) == [], f"{trace!r} should not be flagged"
+
+
+def test_narrative_trace_behavior_is_unchanged_by_the_namespace():
+    """Unshaped text fails the shape check, with or without existence checking."""
+    body = _device_body("TBD, will fill in later")
+    with_ns = validate(body, FakeNamespaces())
+    without_ns = validate(body)
+    assert with_ns == without_ns
+    assert any("DHF Trace" in e for e in with_ns)
+
+
+def test_mixed_trace_reports_only_the_bad_id():
+    body = _device_body("DDS §5; SRS-02-04; SDD-99")
+    errors = validate(body, FakeNamespaces())
+    assert len(errors) == 1, errors
+    assert "SDD-99" in errors[0] and "does not exist" in errors[0]
+
+
+def test_each_bad_id_is_reported_once_even_if_cited_twice():
+    body = _device_body("SDD-99 in one place and SDD-99 again")
+    assert len(validate(body, FakeNamespaces())) == 1
+
+
+def test_non_device_lane_is_unaffected():
+    """validate_light has no DHF Trace requirement, so nothing to existence-check."""
+    assert validate_light("## Summary\n\nA change.") == []
+
+
+def test_anchor_candidates_only_picks_checkable_families():
+    text = "SRS-02-04 ADR-0002 SDD-01 CMP §7 HAZ-26 SOP-013 IFS-09-01 ARC-02"
+    assert dhf_anchor_candidates(text) == [
+        "ARC-02",
+        "HAZ-26",
+        "IFS-09-01",
+        "SDD-01",
+        "SRS-02-04",
+    ]
+
+
+def test_lowercase_prose_is_not_mistaken_for_an_id():
+    assert dhf_anchor_candidates("this is haz-3 mitigation, not an id") == []
+
+
+# --- fail-safe ---------------------------------------------------------------
+
+
+def test_load_dhf_namespaces_raises_when_engine_missing(monkeypatch):
+    """A missing engine must raise, never return an empty namespace.
+
+    An empty DhfNamespaces would classify every cited id as nonexistent and
+    fail every PR; silently returning None would pass them all unverified.
+    """
+    import builtins
+
+    real_import = builtins.__import__
+
+    def no_vvtrace(name, *args, **kwargs):
+        if name.startswith("vvtrace"):
+            raise ImportError("No module named 'vvtrace'")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", no_vvtrace)
+    with pytest.raises(DhfUnavailable) as excinfo:
+        load_dhf_namespaces("/nonexistent")
+    assert "not importable" in str(excinfo.value)
+
+
+def test_load_dhf_namespaces_raises_when_dhf_unreadable(tmp_path, monkeypatch):
+    """Engine present, DHF absent (a failed fetch) — must raise, not pass."""
+    fake = types.ModuleType("vvtrace")
+    fake_ns = types.ModuleType("vvtrace.namespaces")
+
+    def load_all(root):
+        raise FileNotFoundError(f"{root}/02-inputs/SRS.md")
+
+    fake_ns.load_all = load_all
+    monkeypatch.setitem(sys.modules, "vvtrace", fake)
+    monkeypatch.setitem(sys.modules, "vvtrace.namespaces", fake_ns)
+    with pytest.raises(DhfUnavailable) as excinfo:
+        load_dhf_namespaces(str(tmp_path / "missing"))
+    assert "could not read the DHF" in str(excinfo.value)
+
+
+def test_main_fails_the_check_when_dhf_unavailable(monkeypatch, capsys, tmp_path):
+    """End-to-end fail-safe: DHF_ROOT set but unloadable -> non-zero exit."""
+    body = _device_body("Traces to SRS-02-04.")
+    monkeypatch.setenv("PR_BODY", body)
+    monkeypatch.setenv("DHF_ROOT", str(tmp_path / "never-fetched"))
+    monkeypatch.delenv("REPO", raising=False)
+    monkeypatch.delenv("PR_NUMBER", raising=False)
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+
+    with pytest.raises(SystemExit) as excinfo:
+        main()
+    assert excinfo.value.code == 1
+    out = capsys.readouterr().out
+    assert "existence check could not run" in out
+
+
+def test_main_passes_without_dhf_root(monkeypatch, capsys):
+    """No opt-in: the body validates on shape alone and the check passes."""
+    monkeypatch.setenv("PR_BODY", _device_body("Traces to SRS-77-77."))
+    monkeypatch.delenv("DHF_ROOT", raising=False)
+    monkeypatch.delenv("REPO", raising=False)
+    monkeypatch.delenv("PR_NUMBER", raising=False)
+    monkeypatch.delenv("GITHUB_STEP_SUMMARY", raising=False)
+
+    main()
+    assert "complete" in capsys.readouterr().out
+
+
+# --- integration with the real engine (skipped when it is not installed) -----
+
+@pytest.mark.skipif(
+    importlib.util.find_spec("vvtrace") is None,
+    reason="private vvtrace engine not installed",
+)
+def test_real_engine_namespace_shapes_match_the_fake():
+    """Guard against the stub drifting from the engine it stands in for."""
+    from vvtrace.namespaces import DhfNamespaces
+
+    real = DhfNamespaces()
+    fake = FakeNamespaces()
+    for anchor in (
+        "SRS-02-04", "SRS-02", "SDD-01", "ARC-02",
+        "IFS-09-01", "IFS-09", "HAZ-26", "HAZ-3", "SRS-123", "banana",
+    ):
+        assert real.kind(anchor) == fake.kind(anchor), anchor

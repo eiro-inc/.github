@@ -42,6 +42,20 @@ jobs:
 
 After adding the workflow, configure the repository's branch protection or organization ruleset to require the `thorne-pr-boundary-check` status check before merge.
 
+**DHF Trace: anchor existence (opt-in).** By default the DHF Trace section is tested for anchor *shape*, which accepts a well-formed but nonexistent id such as `SRS-77-77`. Pass a `dhf-token` to check cited ids against the controlled DHF instead (thorne-dhf#113 AC2):
+
+```yaml
+      - uses: eiro-inc/.github/.github/actions/thorne-pr-boundary-check@main
+        with:
+          dhf-token: ${{ secrets.DHF_READ_TOKEN }}
+```
+
+The token needs read access to `eiro-inc/thorne-dhf` and, while it is private, to `eiro-inc/thorne-vv-tooling` (the action installs the pinned `vvtrace` engine to load the DHF id namespaces). Omit the input and the action behaves exactly as before — no checkout, no install, stdlib only — so repositories adopt this one at a time rather than all at once.
+
+Only the families the engine has a namespace loader for are checked: **SRS, SDD, ARC, IFS, HAZ**. Everything else in the anchor vocabulary — ADR, CMP, DDS, TRM, UNS, VVP, DR, the `eiro-qms` families (SOP, POL, REC, FRM), `§` references and standard citations — has no DHF namespace and continues to be accepted on shape alone.
+
+Two behaviors worth knowing before enabling it. A cited id of a checkable family that the engine cannot classify is reported as malformed: the DHF writes zero-padded two-digit ids exclusively, so `HAZ-3` is flagged where `HAZ-03` passes. And once enabled, a DHF that cannot be fetched or read **fails** the check rather than falling back to the shape-only test, so the gate never reports green having verified less than it was configured to.
+
 **Pinning.** The example pins `@main`, which is convenient for everyday repositories (fixes propagate without per-repo PRs) but means the check semantics can change under a PR. Repositories that need reproducibility — for example a DHF repository preparing a regulatory submission — should pin to a release tag (e.g., `@v1`) once tags are cut, so a submission-gating PR is validated against a known-good state rather than whatever is on `main`.
 
 The workflow enforces:

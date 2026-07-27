@@ -20,6 +20,13 @@ As a script: reads ``PR_BODY`` plus ``REPO`` / ``PR_NUMBER`` / ``BASE_REF`` /
 file on the base branch, writes a GitHub step summary, emits annotations, and
 exits non-zero on failure. Fail-safe: if the lane cannot be determined, the
 device (full) path is used.
+
+``DHF_ROOT``, when set, opts into the DHF-Trace *existence* check (thorne-dhf#113
+AC2): cited SRS/SDD/ARC/IFS/HAZ ids are validated against the DHF at that path
+via the pinned vvtrace engine. Unset — the default, and the case for any repo
+that has not provisioned a DHF-read token — leaves the anchor *shape* test as
+the only trace check. Fail-safe: if ``DHF_ROOT`` is set but the namespaces
+cannot be loaded, the check fails rather than silently downgrading.
 """
 
 from __future__ import annotations
@@ -127,6 +134,84 @@ ANCHOR_RE = re.compile(
     r"|§\s*\d"
     r"|\b21\s*CFR\b|\bISO\s*\d|\bIEC\s*\d"
 )
+
+
+# --- DHF Trace anchor *existence* (thorne-dhf#113 AC2, issue #23) ------------
+#
+# ANCHOR_RE above tests anchor *shape*, which accepts a well-formed but
+# nonexistent id (``SRS-77-77``). AC2 wants existence, checked against the
+# controlled DHF. Existence-checking is **opt-in**: it happens only when the
+# caller supplies a DHF-read token, and the shape check above is unchanged
+# otherwise, so a repo that has not provisioned the secret keeps today's
+# behavior rather than failing every PR.
+#
+# Only the families the engine has a namespace loader for can be checked:
+# SRS, SDD, ARC, IFS, HAZ. The rest of ANCHOR_RE's vocabulary (ADR, CMP, DDS,
+# TRM, §N, 21 CFR, ISO/IEC …) has no DHF namespace — and the eiro-qms families
+# (SOP, POL, REC, FRM) live in another repository entirely — so those stay
+# shape-only. Checking them here would fail nearly every legitimate PR.
+CHECKABLE_ANCHOR_FAMILIES = ("SRS", "SDD", "ARC", "IFS", "HAZ")
+
+# Candidates to hand to the engine's classifier. Deliberately looser than the
+# engine's per-kind patterns: a token of a checkable family that the engine
+# cannot classify is a malformed id of a family we *can* check (``SRS-123``,
+# ``HAZ-7``), which is worth reporting rather than skipping. Uppercase only —
+# the DHF writes these ids uppercase, and matching case-insensitively here
+# would sweep in prose like "haz-mat".
+CHECKABLE_ANCHOR_RE = re.compile(
+    r"\b(?:" + "|".join(CHECKABLE_ANCHOR_FAMILIES) + r")-\d+(?:-\d+[a-z]?)?\b"
+)
+
+
+def dhf_anchor_candidates(trace_text):
+    """Return the DHF-Trace tokens whose existence can be checked, deduped."""
+    return sorted(set(CHECKABLE_ANCHOR_RE.findall(trace_text or "")))
+
+
+def validate_trace_anchors(trace_text, namespaces):
+    """Return errors for cited DHF ids that are malformed or do not exist.
+
+    ``namespaces`` is a ``vvtrace.namespaces.DhfNamespaces`` — its ``kind`` and
+    ``is_valid`` are the validated classification and membership logic
+    (ADR-0008: the engine owns the logic; this Action owns the policy of which
+    anchors to submit and how to phrase the failure).
+    """
+    errors = []
+    for anchor in dhf_anchor_candidates(trace_text):
+        if namespaces.kind(anchor) is None:
+            errors.append(
+                f"DHF Trace cites '{anchor}', which is not a well-formed "
+                f"{anchor.split('-')[0]} identifier. Check the id against the DHF."
+            )
+        elif not namespaces.is_valid(anchor):
+            errors.append(
+                f"DHF Trace cites '{anchor}', which does not exist in the DHF. "
+                "Cite an existing id, or add the DHF item first."
+            )
+    return errors
+
+
+# Raised when existence-checking was requested but the DHF namespaces could not
+# be loaded. Never swallowed: an unavailable DHF must fail the check, not
+# silently downgrade it to the shape-only test (issue #23 acceptance).
+class DhfUnavailable(Exception):
+    pass
+
+
+def load_dhf_namespaces(dhf_root):
+    """Load the DHF namespaces via the pinned vvtrace engine.
+
+    Imported lazily so the module stays importable — and the shape-only path
+    stays stdlib-only — on runners where the engine was never installed.
+    """
+    try:
+        from vvtrace.namespaces import load_all
+    except ImportError as exc:  # engine missing or install failed
+        raise DhfUnavailable(f"vvtrace engine is not importable ({exc})") from exc
+    try:
+        return load_all(dhf_root)
+    except Exception as exc:  # noqa: BLE001 — any load failure must fail the check
+        raise DhfUnavailable(f"could not read the DHF at '{dhf_root}' ({exc})") from exc
 
 
 def normalize_heading(text):
@@ -278,8 +363,12 @@ def validate_new_dependencies(body, manifest_hits):
     ]
 
 
-def validate(body):
-    """Return a list of declaration errors for the given PR body."""
+def validate(body, namespaces=None):
+    """Return a list of declaration errors for the given PR body.
+
+    ``namespaces`` enables the opt-in DHF-Trace existence check; when ``None``
+    the trace is tested for anchor *shape* only, as before.
+    """
     body = body or ""
     if not body.strip():
         # Short-circuit: one actionable error instead of one-per-section noise.
@@ -325,6 +414,11 @@ def validate(body):
                     "Add DHF Trace text citing at least one controlling anchor "
                     "(e.g., DDS §5, ADR-0002, SRS-02-04, CMP §7) for this Thorne-scoped PR."
                 )
+            elif namespaces is not None:
+                # Shape is satisfied; now check that the ids that *can* be
+                # checked actually exist (AC2). Only reached on the device
+                # lane, which is the only lane requiring a DHF Trace.
+                errors.extend(validate_trace_anchors(trace, namespaces))
 
         if SCOPE_DEVICE_FUNCTION in scope_checked:
             non_na_safety = safety_checked - {SAFETY_NA}
@@ -557,7 +651,28 @@ def main():
     body = os.environ.get("PR_BODY")
     actor = os.environ.get("PR_ACTOR", "")
     lane, triggering, note = determine_lane()
-    errors = validate(body) if lane == "device" else validate_light(body, actor)
+
+    # DHF_ROOT is set by the Action only when the caller opted into existence
+    # checking by supplying a DHF-read token. Unset -> shape-only, unchanged.
+    dhf_root = os.environ.get("DHF_ROOT", "").strip()
+    namespaces = None
+    dhf_error = None
+    if dhf_root and lane == "device":
+        try:
+            namespaces = load_dhf_namespaces(dhf_root)
+        except DhfUnavailable as exc:
+            # Fail safe: the caller asked for existence checking and we could
+            # not do it. Passing here would report a green check that verified
+            # strictly less than the caller configured.
+            dhf_error = (
+                f"DHF Trace existence check could not run: {exc}. "
+                "This check is configured to validate cited DHF ids, so it fails "
+                "rather than passing unverified."
+            )
+
+    errors = validate(body, namespaces) if lane == "device" else validate_light(body, actor)
+    if dhf_error:
+        errors.append(dhf_error)
 
     dep_mode = os.environ.get("DEPENDENCY_CHECK_MODE", "warn").strip().lower()
     if dep_mode not in {"warn", "fail"}:
