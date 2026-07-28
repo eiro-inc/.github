@@ -74,31 +74,43 @@ runs:
         # timeout is a backstop only; it covers both network operations below.
         git config --global credential.helper 'cache --timeout=300'
         trap 'git credential-cache exit >/dev/null 2>&1 || true; rm -f "$GIT_CONFIG_GLOBAL"' EXIT
-        python -m pip install --upgrade pip
-        printf 'protocol=https\nhost=github.com\nusername=x-access-token\npassword=%s\n\n' "$INSTALL_TOKEN" | git credential approve
 
         # The DHF is only read for its id namespaces; it is never scanned, so
         # unlike thorne-pr-verification-trace there is no scan-tree overlap to
         # avoid. It still goes to $RUNNER_TEMP rather than the workspace, so the
         # checked-out source the caller may be inspecting is left untouched.
         #
-        # Setup failure must not abort the Action here: composite steps cannot
-        # set continue-on-error, and aborting would surface a raw git/pip error
-        # instead of the check's own actionable message. Report and continue —
-        # the next step still sets DHF_ROOT, so the script's fail-safe fires and
-        # fails the check with an explanation. The gate never passes unverified.
+        # The engine goes into a throwaway venv rather than the runner's
+        # interpreter, so a vvtrace that happens to be present on the runner
+        # cannot serve the check if the pinned install fails.
+        #
+        # EVERY fallible command belongs inside the guarded group. Setup failure
+        # must not abort the Action: composite steps cannot set
+        # continue-on-error, and aborting would surface a raw git/pip error
+        # instead of the check's own actionable message. On failure we leave the
+        # readiness marker unset, and the next step fails the check with an
+        # explanation. The gate never passes unverified.
         DHF_DIR="$RUNNER_TEMP/thorne-dhf"
-        rm -rf "$DHF_DIR"
+        VVENV="$RUNNER_TEMP/thorne-vvenv"
+        rm -rf "$DHF_DIR" "$VVENV"
         rc=0
         {
-          git init -q "$DHF_DIR" \
+          printf 'protocol=https\nhost=github.com\nusername=x-access-token\npassword=%s\n\n' "$INSTALL_TOKEN" | git credential approve \
+            && git init -q "$DHF_DIR" \
             && git -C "$DHF_DIR" remote add origin "https://github.com/$DHF_REPO" \
             && git -C "$DHF_DIR" fetch -q --depth 1 origin "$DHF_REF" \
             && git -C "$DHF_DIR" checkout -q FETCH_HEAD \
-            && python -m pip install "git+https://github.com/eiro-inc/thorne-vv-tooling@${VVTRACE_REF}"
+            && python -m venv "$VVENV" \
+            && "$VVENV/bin/python" -m pip install -q "git+https://github.com/eiro-inc/thorne-vv-tooling@${VVTRACE_REF}" \
+            && "$VVENV/bin/python" -c 'import vvtrace.namespaces'
         } || rc=1
         if [ "$rc" -ne 0 ]; then
-          echo "::warning::Could not fetch the DHF or install the vvtrace engine; the boundary check will fail with details rather than skip the existence check."
+          echo "::warning::Could not fetch the DHF or install the pinned vvtrace engine; the boundary check will fail with details rather than skip the existence check."
+        else
+          # Only a complete, verified setup publishes the marker the validator
+          # requires. Absent it, the validator fails rather than falling back.
+          echo "THORNE_DHF_ROOT=$DHF_DIR" >> "$GITHUB_ENV"
+          echo "THORNE_VVENV=$VVENV" >> "$GITHUB_ENV"
         fi
 
     - name: Validate PR template sections
@@ -114,11 +126,18 @@ runs:
         DHF_ENABLED: ${{ inputs.dhf-token != '' }}
       run: |
         set -euo pipefail
-        # DHF_ROOT is what switches the script into existence-checking. Set it
-        # only when the caller opted in — and set it even if the fetch above
-        # failed, so the script's fail-safe reports an unreadable DHF instead of
-        # quietly falling back to the shape-only check.
+        # DHF_REQUIRED says the caller opted in; DHF_ROOT is passed only when
+        # the setup step published its readiness marker. Opted in but no marker
+        # -> the validator fails with an explanation rather than silently
+        # downgrading to the shape-only check.
+        PYTHON=python3
         if [ "$DHF_ENABLED" = "true" ]; then
-          export DHF_ROOT="$RUNNER_TEMP/thorne-dhf"
+          export DHF_REQUIRED=1
+          if [ -n "${THORNE_DHF_ROOT:-}" ]; then
+            export DHF_ROOT="$THORNE_DHF_ROOT"
+            # Run under the venv the engine was installed into, so the import
+            # resolves to the pinned build and nothing else on the runner.
+            PYTHON="${THORNE_VVENV:-}/bin/python"
+          fi
         fi
-        python3 "${GITHUB_ACTION_PATH}/thorne_pr_boundary_check.py"
+        "$PYTHON" "${GITHUB_ACTION_PATH}/thorne_pr_boundary_check.py"

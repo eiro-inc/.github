@@ -24,6 +24,7 @@ from thorne_pr_boundary_check import (
     is_whitelisted,
     load_dhf_namespaces,
     main,
+    normalize_anchor,
     parse_non_device_globs,
     validate,
     validate_light,
@@ -513,8 +514,13 @@ class FakeNamespaces:
     skips when the engine is absent.
     """
 
+    # IFS-02-09a mirrors the real DHF, which does carry letter-suffixed IFS
+    # items — the reason normalization must not uppercase the whole token.
     EXISTING = frozenset(
-        {"SRS-02-04", "SRS-02", "SDD-01", "ARC-02", "IFS-09-01", "IFS-09", "HAZ-26"}
+        {
+            "SRS-02-04", "SRS-02", "SDD-01", "ARC-02",
+            "IFS-09-01", "IFS-09", "IFS-02", "IFS-02-09a", "HAZ-26",
+        }
     )
     SHAPES = (
         (r"SRS-\d{2}-\d{2}", "srs"),
@@ -623,8 +629,89 @@ def test_anchor_candidates_only_picks_checkable_families():
     ]
 
 
-def test_lowercase_prose_is_not_mistaken_for_an_id():
-    assert dhf_anchor_candidates("this is haz-3 mitigation, not an id") == []
+def test_prose_is_not_mistaken_for_an_id():
+    """A digit must follow the family hyphen, so hyphenated prose flows."""
+    for text in ("SRS-based approach", "haz-mat storage", "the ARC-shaped brief"):
+        assert dhf_anchor_candidates(text) == [], text
+
+
+# --- fail-open regressions reported in review (Codex) ------------------------
+
+
+def test_lowercase_id_is_existence_checked_not_skipped():
+    """ANCHOR_RE is case-insensitive; a case-only mismatch must not fail open.
+
+    Uppercase-only candidate matching let 'srs-77-77' satisfy the shape test
+    while producing no candidate, so the citation was accepted unvalidated.
+    """
+    assert dhf_anchor_candidates("srs-77-77") == ["srs-77-77"]
+    errors = validate(_device_body("Traces to srs-77-77."), FakeNamespaces())
+    assert any("srs-77-77" in e and "does not exist" in e for e in errors), errors
+
+
+def test_lowercase_citation_of_a_real_id_passes():
+    """Normalization is on the family prefix, so a real id is not failed on casing."""
+    assert validate(_device_body("Traces to srs-02-04."), FakeNamespaces()) == []
+
+
+def test_ifs_item_suffix_survives_normalization():
+    """Uppercasing the whole token would break IFS-02-09a's lowercase suffix.
+
+    The real DHF carries letter-suffixed IFS items (IFS-02-09a, IFS-04-04b),
+    and the engine's IFS pattern requires that suffix lowercase.
+    """
+    assert normalize_anchor("ifs-02-09a") == "IFS-02-09a"
+    assert normalize_anchor("IFS-02-09A") == "IFS-02-09A"  # not silently repaired
+    assert validate(_device_body("Traces to ifs-02-09a."), FakeNamespaces()) == []
+
+
+def test_overlong_token_is_not_truncated_to_a_valid_prefix():
+    """'SRS-02-04-999' must not be read as the existing 'SRS-02-04'."""
+    assert dhf_anchor_candidates("SRS-02-04-999") == ["SRS-02-04-999"]
+    errors = validate(_device_body("Traces to SRS-02-04-999."), FakeNamespaces())
+    assert any("SRS-02-04-999" in e and "well-formed" in e for e in errors), errors
+
+
+def test_duplicate_citations_differing_only_in_case_report_once():
+    body = _device_body("SDD-99 and sdd-99")
+    assert len(validate(body, FakeNamespaces())) == 1
+
+
+def test_standalone_arc_citation_satisfies_the_shape_check():
+    """ARC was missing from ANCHOR_RE, so an ARC-only trace was rejected
+    before existence validation could run — even for an ARC id that exists."""
+    assert validate(_device_body("Traces to ARC-02."), FakeNamespaces()) == []
+
+
+def test_standalone_nonexistent_arc_is_reported_as_missing():
+    errors = validate(_device_body("Traces to ARC-99."), FakeNamespaces())
+    assert any("ARC-99" in e and "does not exist" in e for e in errors), errors
+
+
+def test_markdown_link_target_slug_is_not_a_citation():
+    """GitHub heading slugs look like malformed ids; they are URL fragments.
+
+    Real case, thorne-dhf#139: a DHF Trace linking to the document it cites
+    carried '#ifs-02--patient-data-capture' in the link target, which a plain
+    token scan reads as a malformed IFS id.
+    """
+    trace = "[IFS-02](https://github.com/eiro-inc/thorne-dhf/blob/main/02-inputs/IFS.md#ifs-02--patient-data-capture)"
+    assert dhf_anchor_candidates(trace) == ["IFS-02"]
+    assert validate(_device_body(trace), FakeNamespaces()) == []
+
+
+def test_bare_url_containing_an_id_is_ignored():
+    trace = "See https://github.com/eiro-inc/thorne-dhf/blob/main/04-outputs/SDD.md#sdd-99-widget and SDD-01."
+    assert dhf_anchor_candidates(trace) == ["SDD-01"]
+    assert validate(_device_body(trace), FakeNamespaces()) == []
+
+
+def test_alpha_placeholder_remains_narrative_not_a_candidate():
+    """Documented limitation: SRS-XX-YY is not a candidate (catching it would
+    flag prose). Alone it still fails the shape check; only a trace that also
+    carries a real anchor lets it through."""
+    assert dhf_anchor_candidates("SRS-XX-YY") == []
+    assert validate(_device_body("SRS-XX-YY"), FakeNamespaces())
 
 
 # --- fail-safe ---------------------------------------------------------------

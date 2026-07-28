@@ -129,7 +129,7 @@ DHF_TRACE_REQUIRED_SCOPES = frozenset({
 # the template's hint text changes, and rejects freeform non-anchor text.
 ANCHOR_RE = re.compile(
     r"(?i)"
-    r"\b(?:ADR|SOP|FRM|POL|REC|UNS|SRS|SDD|IFS|HAZ|DR|VVP|VVR|DDP)-\d{1,4}(?:-\d{1,3})?\b"
+    r"\b(?:ADR|SOP|FRM|POL|REC|UNS|SRS|SDD|ARC|IFS|HAZ|DR|VVP|VVR|DDP)-\d{1,4}(?:-\d{1,3})?\b"
     r"|\b(?:DDS|DDP|RMP|RMF|CMP|TRM)\b"
     r"|§\s*\d"
     r"|\b21\s*CFR\b|\bISO\s*\d|\bIEC\s*\d"
@@ -152,20 +152,70 @@ ANCHOR_RE = re.compile(
 # shape-only. Checking them here would fail nearly every legitimate PR.
 CHECKABLE_ANCHOR_FAMILIES = ("SRS", "SDD", "ARC", "IFS", "HAZ")
 
-# Candidates to hand to the engine's classifier. Deliberately looser than the
-# engine's per-kind patterns: a token of a checkable family that the engine
-# cannot classify is a malformed id of a family we *can* check (``SRS-123``,
-# ``HAZ-7``), which is worth reporting rather than skipping. Uppercase only —
-# the DHF writes these ids uppercase, and matching case-insensitively here
-# would sweep in prose like "haz-mat".
+# Candidates to hand to the engine's classifier. Three properties matter, and
+# each closes a way the check could pass without validating anything:
+#
+# * **Case-insensitive**, because ANCHOR_RE is. If this were uppercase-only,
+#   ``srs-77-77`` would satisfy the shape test and yield no candidate — the
+#   citation would be accepted with nothing validated.
+# * **Consumes the whole token** (``-\d[\w-]*``) rather than stopping at the
+#   engine's per-kind shape. A ``\b``-terminated pattern extracts the valid
+#   prefix ``SRS-02-04`` out of ``SRS-02-04-999`` and reports success while the
+#   malformed id goes unchecked.
+# * **Requires a digit** immediately after the family hyphen, so prose keeps
+#   flowing: "SRS-based approach" and "haz-mat storage" are not id citations.
+#   The cost is that an all-alpha placeholder (``SRS-XX-YY``) is not treated as
+#   a candidate; alone it still fails the ANCHOR_RE shape test, and catching it
+#   here would mean flagging ordinary hyphenated prose.
+#
+# Deliberately looser than the engine's per-kind patterns: a token of a
+# checkable family the engine cannot classify is a malformed id of a family we
+# *can* check (``SRS-123``, ``HAZ-7``), worth reporting rather than skipping.
 CHECKABLE_ANCHOR_RE = re.compile(
-    r"\b(?:" + "|".join(CHECKABLE_ANCHOR_FAMILIES) + r")-\d+(?:-\d+[a-z]?)?\b"
+    r"(?i)\b(?:" + "|".join(CHECKABLE_ANCHOR_FAMILIES) + r")-\d[\w-]*"
 )
+
+# The DHF writes family prefixes uppercase and the engine's patterns match only
+# that, but an IFS item's optional suffix is lowercase (``IFS-09-01a``). Upper
+# only the leading alpha run, so a lowercase citation of a real id is validated
+# as that id rather than reported as malformed on a casing technicality.
+_FAMILY_PREFIX_RE = re.compile(r"^[A-Za-z]+")
+
+# A DHF Trace routinely links to the document it cites, and GitHub's heading
+# anchors are id-derived slugs:
+# ``[IFS-02](https://…/IFS.md#ifs-02--patient-data-capture)``. The slug is not
+# a citation — it is a URL fragment — but it starts with a family prefix and a
+# digit, so a token scan would read it as a malformed ``IFS-02…`` id. Drop
+# markdown link targets and bare URLs before scanning; the link *text*
+# (``IFS-02``) is left in place and still checked.
+_LINK_TARGET_RE = re.compile(r"\]\([^)]*\)")
+_BARE_URL_RE = re.compile(r"(?i)\b(?:https?|ftp)://\S+")
+
+
+def normalize_anchor(anchor):
+    """Uppercase an anchor's family prefix, leaving the rest untouched."""
+    return _FAMILY_PREFIX_RE.sub(lambda m: m.group(0).upper(), anchor)
+
+
+def strip_link_targets(text):
+    """Remove URL targets and bare URLs, keeping surrounding prose and link text."""
+    return _BARE_URL_RE.sub(" ", _LINK_TARGET_RE.sub("]", text or ""))
 
 
 def dhf_anchor_candidates(trace_text):
-    """Return the DHF-Trace tokens whose existence can be checked, deduped."""
-    return sorted(set(CHECKABLE_ANCHOR_RE.findall(trace_text or "")))
+    """Return the DHF-Trace tokens whose existence can be checked, deduped.
+
+    Deduplicated on the normalized form so a trace citing both ``SRS-02-04``
+    and ``srs-02-04`` reports at most once.
+    """
+    text = strip_link_targets(trace_text)
+    seen = {}
+    for match in CHECKABLE_ANCHOR_RE.finditer(text):
+        # A token directly after '#' is a leftover URL fragment, not a citation.
+        if match.start() and text[match.start() - 1] == "#":
+            continue
+        seen.setdefault(normalize_anchor(match.group(0)), match.group(0))
+    return [seen[key] for key in sorted(seen)]
 
 
 def validate_trace_anchors(trace_text, namespaces):
@@ -178,12 +228,14 @@ def validate_trace_anchors(trace_text, namespaces):
     """
     errors = []
     for anchor in dhf_anchor_candidates(trace_text):
-        if namespaces.kind(anchor) is None:
+        # Classify and look up the normalized form; report the text as written.
+        normalized = normalize_anchor(anchor)
+        if namespaces.kind(normalized) is None:
             errors.append(
                 f"DHF Trace cites '{anchor}', which is not a well-formed "
-                f"{anchor.split('-')[0]} identifier. Check the id against the DHF."
+                f"{normalized.split('-')[0]} identifier. Check the id against the DHF."
             )
-        elif not namespaces.is_valid(anchor):
+        elif not namespaces.is_valid(normalized):
             errors.append(
                 f"DHF Trace cites '{anchor}', which does not exist in the DHF. "
                 "Cite an existing id, or add the DHF item first."
@@ -652,12 +704,23 @@ def main():
     actor = os.environ.get("PR_ACTOR", "")
     lane, triggering, note = determine_lane()
 
-    # DHF_ROOT is set by the Action only when the caller opted into existence
-    # checking by supplying a DHF-read token. Unset -> shape-only, unchanged.
+    # DHF_REQUIRED marks that the caller opted into existence checking;
+    # DHF_ROOT is set only when the fetch and the pinned install both
+    # succeeded. Requiring the second rather than inferring readiness from
+    # "is vvtrace importable" matters: on a runner with some other vvtrace
+    # already present, a failed pinned install would otherwise validate against
+    # an unpinned engine and report a green check.
+    dhf_required = os.environ.get("DHF_REQUIRED", "").strip() == "1"
     dhf_root = os.environ.get("DHF_ROOT", "").strip()
     namespaces = None
     dhf_error = None
-    if dhf_root and lane == "device":
+    if dhf_required and not dhf_root and lane == "device":
+        dhf_error = (
+            "DHF Trace existence check could not run: the DHF fetch or the pinned "
+            "vvtrace install did not complete. This check is configured to validate "
+            "cited DHF ids, so it fails rather than passing unverified."
+        )
+    elif dhf_root and lane == "device":
         try:
             namespaces = load_dhf_namespaces(dhf_root)
         except DhfUnavailable as exc:
