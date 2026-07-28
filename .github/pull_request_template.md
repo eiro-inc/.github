@@ -12,6 +12,9 @@ DEVICE-LANE SECTION ↓  — only required if this PR touches device code.
 
 The `thorne-pr-boundary-check` decides the lane automatically from the files
 you changed: everything is device unless carved out in `.github/thorne-lanes.yml`.
+The lane selects lifecycle controls; it does not by itself classify the
+product function. A non-device function can use this lane when it changes an
+unsegregated device software item.
 
 • Non-device PR? Leave the block below as-is (or delete it) and you're done.
 • Device PR? The check fails until the block is filled in — and it lists the
@@ -24,6 +27,11 @@ you changed: everything is device unless carved out in `.github/thorne-lanes.yml
 
 ## Thorne Scope
 
+<!-- Classify the product purpose separately from the affected implementation.
+     Example: a patient self-view implemented through an unsegregated device
+     item selects Non-device function + Multiple-Function impact assessment,
+     not Device function merely because the PR is on the device lane. -->
+
 - [ ] Device function
 - [ ] Non-device function
 - [ ] Multiple-Function impact assessment
@@ -35,12 +43,26 @@ you changed: everything is device unless carved out in `.github/thorne-lanes.yml
 
 <!-- Cite controlling anchors: CMP §7, DDS §5/§6/§7, UNS, SRS, SDD, HAZ, TRM, DR, etc. -->
 
+## Affected Device Software Items
+
+<!-- One line per device software item this PR changes, including a segregated
+     lower-class functional item and every unsegregated shared item it changes:
+       ARC-01 — Class B — cadence reducer
+       ARC-04 — Class C — persistence / authoritative projection
+     Product-function scope and affected-item class are separate axes. A
+     Non-device function + Multiple-Function impact PR may therefore identify
+     ARC-04 — Class C. If no device item is affected, explain why. -->
+
+- N/A — no device software item affected
+
 ## Safety Class
+
+<!-- Select every class named under Affected Device Software Items. These are
+     software-item classes, not a classification of the product purpose. -->
 
 - [ ] Class A
 - [ ] Class B
 - [ ] Class C
-- [ ] C-adjacent integrity control
 - [ ] N/A
 - [ ] TBD / blocked until resolved
 

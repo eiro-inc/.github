@@ -79,11 +79,17 @@ THORNE_SCOPE_ITEMS = frozenset({
 })
 
 SAFETY_NA = collapse_whitespace("N/A")
+SAFETY_TBD = collapse_whitespace("TBD / blocked until resolved")
+SAFETY_C_ADJACENT = collapse_whitespace("C-adjacent integrity control")
+SAFETY_CONCRETE_CLASSES = frozenset(map(collapse_whitespace, (
+    "Class A",
+    "Class B",
+    "Class C",
+)))
 SAFETY_CLASS_ITEMS = frozenset(map(collapse_whitespace, (
     "Class A",
     "Class B",
     "Class C",
-    "C-adjacent integrity control",
     "N/A",
     "TBD / blocked until resolved",
 )))
@@ -112,6 +118,20 @@ DHF_TRACE_REQUIRED_SCOPES = frozenset({
     SCOPE_PRE_DESIGN,
     SCOPE_DHF_ARTIFACT,
 })
+
+# Source changes that implement a device function or affect a device item
+# through a Multiple-Function use must identify the concrete architecture item
+# and its class. The dedicated template section is preferred; the DHF Trace is
+# also scanned so PRs opened from the immediately preceding template do not
+# fail solely because they lack the new heading.
+AFFECTED_ITEM_REQUIRED_SCOPES = frozenset({
+    SCOPE_DEVICE_FUNCTION,
+    SCOPE_MULTI_FUNCTION,
+})
+AFFECTED_ITEM_SECTION = "Affected Device Software Items"
+AFFECTED_ITEM_CLASS_RE = re.compile(
+    r"(?i)\b(ARC-\d{2})\b[^\n]{0,120}?\b(Class\s+[ABC])\b"
+)
 
 # A DHF Trace is substantive when it cites at least one recognizable DHF/QMS
 # anchor. The vocabulary covers the DHF document-ID families named in the PR
@@ -326,12 +346,60 @@ def validate(body):
                     "(e.g., DDS §5, ADR-0002, SRS-02-04, CMP §7) for this Thorne-scoped PR."
                 )
 
-        if SCOPE_DEVICE_FUNCTION in scope_checked:
-            non_na_safety = safety_checked - {SAFETY_NA}
-            if not non_na_safety:
+        if scope_checked & AFFECTED_ITEM_REQUIRED_SCOPES:
+            concrete_safety = safety_checked & SAFETY_CONCRETE_CLASSES
+            if not concrete_safety:
                 errors.append(
-                    "Device-function PRs must select at least one Safety Class item other than N/A."
+                    "Device-function and Multiple-Function-impact PRs must select "
+                    "at least one concrete Safety Class (Class A, B, or C)."
                 )
+
+            affected_text = "\n".join((
+                substantive_text(
+                    parsed.get(normalize_heading(AFFECTED_ITEM_SECTION), "")
+                ),
+                substantive_text(parsed.get(normalize_heading("DHF Trace"), "")),
+            ))
+            affected_mappings = AFFECTED_ITEM_CLASS_RE.findall(affected_text)
+            if not affected_mappings:
+                errors.append(
+                    "Identify at least one affected device software item and class "
+                    "as 'ARC-NN — Class A/B/C' under ## Affected Device Software "
+                    "Items (or in the DHF Trace for a pre-template PR). Product "
+                    "scope and item class are separate: a non-device function with "
+                    "Multiple-Function impact may identify ARC-04 — Class C."
+                )
+            else:
+                mapped_classes = {
+                    collapse_whitespace(f"Class {class_name[-1].upper()}")
+                    for _, class_name in affected_mappings
+                }
+                unchecked_classes = mapped_classes - concrete_safety
+                if unchecked_classes:
+                    errors.append(
+                        "Select every Safety Class named by an affected ARC item: "
+                        + ", ".join(sorted(unchecked_classes))
+                    )
+                unmapped_classes = concrete_safety - mapped_classes
+                if unmapped_classes:
+                    errors.append(
+                        "Every selected Safety Class must map to an affected ARC "
+                        "item: " + ", ".join(sorted(unmapped_classes))
+                    )
+
+            if SAFETY_NA in safety_checked and concrete_safety:
+                errors.append("Do not combine Safety Class N/A with Class A, B, or C.")
+            if SAFETY_TBD in safety_checked:
+                errors.append(
+                    "Resolve 'TBD / blocked until resolved' before merge and select "
+                    "the affected software item's concrete class."
+                )
+
+        if SAFETY_C_ADJACENT in safety_checked:
+            errors.append(
+                "'C-adjacent integrity control' is not a software safety class; "
+                "identify each affected ARC item and select Class A, B, or C."
+            )
 
         for item in MANDATORY_BOUNDARY_ITEMS:
             if item not in boundary_checked:

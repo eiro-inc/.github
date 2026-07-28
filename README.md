@@ -8,11 +8,17 @@ The organization-level pull request template includes Thorne-specific sections f
 
 - Thorne scope classification.
 - DHF trace anchors.
-- Safety class declaration.
+- Affected device software-item (`ARC-NN`) and safety-class mapping.
 - Verification evidence.
 - Boundary confirmations for the device/non-device membrane.
 
 Repositories inherit this template unless they define a repository-local `.github/pull_request_template.md`.
+
+The automatic **device lane** and the declared **product-function scope** are
+separate axes. A PR can correctly select `Non-device function` plus
+`Multiple-Function impact assessment` while using the device lane and naming an
+unsegregated affected item such as `ARC-04 — Class C`. Safety class follows the
+affected software item; “C-adjacent” is not a safety class.
 
 ## Composite Actions
 
@@ -52,7 +58,11 @@ The workflow enforces:
 - At least one Thorne Scope item is checked.
 - `Not Thorne-related` is not combined with Thorne-specific scope items.
 - DHF Trace text is non-placeholder when the PR touches device function, Multiple-Function impact assessment, pre-design scaffolding, or DHF/QMS artifacts.
-- Device-function PRs select at least one Safety Class item other than `N/A`.
+- Device-function and Multiple-Function-impact PRs select at least one concrete
+  Safety Class and identify every affected device software item as
+  `ARC-NN — Class A/B/C`.
+- Every selected class maps to an affected item, and every affected item's
+  class is selected. `C-adjacent` is rejected as a class.
 - Thorne-related PRs confirm the required boundary checklist items.
 
 ### Thorne PR Verification-Traceability Check

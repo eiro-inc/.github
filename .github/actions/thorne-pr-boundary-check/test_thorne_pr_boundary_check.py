@@ -32,6 +32,7 @@ def make_body(
     safety=(),
     boundary_checked=ALL_BOUNDARY_ITEMS,
     dhf_trace="DDS §5",
+    affected_items="- ARC-01 — Class B",
     drop_sections=(),
 ):
     blocks = {
@@ -39,6 +40,7 @@ def make_body(
         "Related Issue": "Closes #1",
         "Thorne Scope": _checklist(sorted(THORNE_SCOPE_ITEMS), scopes),
         "DHF Trace": dhf_trace,
+        "Affected Device Software Items": affected_items,
         "Safety Class": _checklist(sorted(SAFETY_CLASS_ITEMS), safety),
         "Verification": "- [x] DHF document review only",
         "Thorne Boundary Check": _checklist(ALL_BOUNDARY_ITEMS, boundary_checked),
@@ -95,6 +97,73 @@ def test_numbered_dhf_ids_are_accepted():
 def test_device_function_requires_non_na_safety_class():
     body = make_body(["Device function"], ["N/A"], MANDATORY_BOUNDARY_ITEMS, "DDS §5")
     assert any("Safety Class" in e for e in validate(body))
+
+
+def test_non_device_multiple_function_class_c_item_passes():
+    body = make_body(
+        ["Non-device function", "Multiple-Function impact assessment"],
+        ["Class C"],
+        MANDATORY_BOUNDARY_ITEMS,
+        "ADR-0010; SRS-09-23",
+        "- ARC-04 — Class C — subject-bound authoritative readout",
+    )
+    assert validate(body) == []
+
+
+def test_multiple_function_requires_affected_arc_item_and_class():
+    body = make_body(
+        ["Non-device function", "Multiple-Function impact assessment"],
+        ["Class C"],
+        MANDATORY_BOUNDARY_ITEMS,
+        "ADR-0010",
+        "- N/A — no device software item affected",
+    )
+    assert any("ARC-NN" in e for e in validate(body))
+
+
+def test_affected_item_class_must_match_safety_checklist():
+    body = make_body(
+        ["Device function"],
+        ["Class B"],
+        MANDATORY_BOUNDARY_ITEMS,
+        "SDD §4",
+        "- ARC-04 — Class C — persistence",
+    )
+    errors = validate(body)
+    assert any("Select every Safety Class" in e for e in errors)
+    assert any("must map to an affected ARC item" in e for e in errors)
+
+
+def test_multiple_affected_items_and_classes_pass():
+    body = make_body(
+        ["Device function"],
+        ["Class B", "Class C"],
+        MANDATORY_BOUNDARY_ITEMS,
+        "SDD §4",
+        "- ARC-01 — Class B — reducer\n- ARC-04 — Class C — persistence",
+    )
+    assert validate(body) == []
+
+
+def test_checked_c_adjacent_is_rejected_as_not_a_class():
+    body = make_body(["Device function"], ["Class C"], MANDATORY_BOUNDARY_ITEMS, "SDD §4")
+    body = body.replace(
+        "- [ ] N/A",
+        "- [ ] N/A\n- [x] C-adjacent integrity control",
+    )
+    assert any("not a software safety class" in e for e in validate(body))
+
+
+def test_pre_template_body_can_map_item_in_dhf_trace():
+    body = make_body(
+        ["Non-device function", "Multiple-Function impact assessment"],
+        ["Class C"],
+        MANDATORY_BOUNDARY_ITEMS,
+        "ADR-0010; affected software item ARC-04, Class C.",
+        "",
+    )
+    body = body.replace("## Affected Device Software Items\n\n", "")
+    assert validate(body) == []
 
 
 def test_non_device_pr_does_not_require_dhf_trace():
@@ -378,6 +447,7 @@ def test_org_template_sections_are_all_discoverable():
     # every required heading. Guards against a template edit that breaks parsing.
     errors = validate(_org_template())
     assert not any(e.startswith("Missing required section") for e in errors)
+    assert "## Affected Device Software Items" in _org_template()
 
 
 def test_filled_org_template_passes_device_validation():
@@ -387,6 +457,10 @@ def test_filled_org_template_passes_device_validation():
     for item in ("Device function", "Class B", *MANDATORY_BOUNDARY_ITEMS):
         body = body.replace(f"- [ ] {item}", f"- [x] {item}")
     body = body.replace("## DHF Trace\n", "## DHF Trace\n\nTraces to DDS §5.\n")
+    body = body.replace(
+        "- N/A — no device software item affected",
+        "- ARC-01 — Class B — device function",
+    )
     assert validate(body) == []
 
 
