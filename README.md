@@ -20,6 +20,12 @@ separate axes. A PR can correctly select `Non-device function` plus
 unsegregated affected item such as `ARC-04 — Class C`. Safety class follows the
 affected software item; “C-adjacent” is not a safety class.
 
+Internal build, test, deployment, and lifecycle tooling is neither a device nor
+a non-device product function merely because its files select the device lane.
+Such a PR selects `DHF/QMS artifact`, traces the tooling and its consuming use to
+CMP §§4.1, 6, and 9, identifies any affected ARC item, and selects Safety Class
+`N/A` when no device software item is affected.
+
 ## Composite Actions
 
 ### Thorne PR Boundary Check

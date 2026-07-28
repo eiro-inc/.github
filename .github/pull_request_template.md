@@ -30,7 +30,10 @@ unsegregated device software item.
 <!-- Classify the product purpose separately from the affected implementation.
      Example: a patient self-view implemented through an unsegregated device
      item selects Non-device function + Multiple-Function impact assessment,
-     not Device function merely because the PR is on the device lane. -->
+     not Device function merely because the PR is on the device lane.
+     Internal build, test, deployment, or lifecycle tooling is not a product
+     function: select DHF/QMS artifact, trace its consuming use to CMP
+     §§4.1/6/9, and use Safety Class N/A when no ARC item is affected. -->
 
 - [ ] Device function
 - [ ] Non-device function

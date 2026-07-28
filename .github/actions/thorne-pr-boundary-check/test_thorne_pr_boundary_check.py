@@ -110,6 +110,17 @@ def test_non_device_multiple_function_class_c_item_passes():
     assert validate(body) == []
 
 
+def test_lifecycle_tooling_with_no_affected_device_item_passes():
+    body = make_body(
+        ["DHF/QMS artifact"],
+        ["N/A"],
+        MANDATORY_BOUNDARY_ITEMS,
+        "CMP §§4.1, 6, and 9",
+        "- N/A — lifecycle tooling changes no ARC item",
+    )
+    assert validate(body) == []
+
+
 def test_multiple_function_requires_affected_arc_item_and_class():
     body = make_body(
         ["Non-device function", "Multiple-Function impact assessment"],
