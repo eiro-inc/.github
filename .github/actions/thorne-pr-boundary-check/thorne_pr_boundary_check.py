@@ -129,7 +129,12 @@ DHF_TRACE_REQUIRED_SCOPES = frozenset({
 # the template's hint text changes, and rejects freeform non-anchor text.
 ANCHOR_RE = re.compile(
     r"(?i)"
-    r"\b(?:ADR|SOP|FRM|POL|REC|UNS|SRS|SDD|ARC|IFS|HAZ|DR|VVP|VVR|DDP)-\d{1,4}(?:-\d{1,3})?\b"
+    # No ARC. SDD §3: architecture handles ARC-NN "are not controlled document
+    # identifiers and shall not be cited as design-input or design-output IDs",
+    # so an ARC citation must not satisfy the DHF Trace requirement. That the
+    # engine has an ARC namespace loader means ARC *can* be checked, not that it
+    # may be cited — see CHECKABLE_ANCHOR_FAMILIES below.
+    r"\b(?:ADR|SOP|FRM|POL|REC|UNS|SRS|SDD|IFS|HAZ|DR|VVP|VVR|DDP)-\d{1,4}(?:-\d{1,3})?\b"
     r"|\b(?:DDS|DDP|RMP|RMF|CMP|TRM)\b"
     r"|§\s*\d"
     r"|\b21\s*CFR\b|\bISO\s*\d|\bIEC\s*\d"
@@ -150,6 +155,14 @@ ANCHOR_RE = re.compile(
 # TRM, §N, 21 CFR, ISO/IEC …) has no DHF namespace — and the eiro-qms families
 # (SOP, POL, REC, FRM) live in another repository entirely — so those stay
 # shape-only. Checking them here would fail nearly every legitimate PR.
+#
+# "Checkable" and "citable" are independent. ARC is checkable — the engine loads
+# the namespace — but SDD §3 forbids citing ARC-NN as a design-input or
+# design-output ID, so ARC is absent from ANCHOR_RE above and cannot satisfy the
+# DHF Trace requirement on its own. It stays here so that an ARC id appearing
+# beside a legitimate anchor is still validated rather than ignored. Whether
+# such a citation should *additionally* be reported as non-citable per SDD §3 is
+# deliberately left open.
 CHECKABLE_ANCHOR_FAMILIES = ("SRS", "SDD", "ARC", "IFS", "HAZ")
 
 # Candidates to hand to the engine's classifier. Three properties matter, and

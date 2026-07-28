@@ -54,6 +54,8 @@ The token needs read access to `eiro-inc/thorne-dhf` and, while it is private, t
 
 Only the families the engine has a namespace loader for are checked: **SRS, SDD, ARC, IFS, HAZ**. Everything else in the anchor vocabulary — ADR, CMP, DDS, TRM, UNS, VVP, DR, the `eiro-qms` families (SOP, POL, REC, FRM), `§` references and standard citations — has no DHF namespace and continues to be accepted on shape alone.
 
+Checkable and citable are separate things. `ARC-NN` handles are checkable, but SDD §3 records that they are not controlled document identifiers and "shall not be cited as design-input or design-output IDs" — so an ARC citation does **not** satisfy the DHF Trace requirement on its own, whether or not the id exists. It is still validated when it appears alongside a legitimate anchor, so a bogus `ARC-99` is not ignored.
+
 Three behaviors worth knowing before enabling it:
 
 - A cited id of a checkable family that the engine cannot classify is reported as **malformed**: the DHF writes zero-padded two-digit ids exclusively, so `HAZ-3` is flagged where `HAZ-03` passes, and `SRS-02-04-999` is flagged rather than being read as the existing `SRS-02-04`. Citations are matched case-insensitively and the family prefix is normalized, so `srs-02-04` validates as `SRS-02-04` — the check cannot be sidestepped by casing.

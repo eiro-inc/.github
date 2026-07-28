@@ -1,6 +1,5 @@
 """Unit tests for the Thorne PR boundary-check validator."""
 
-import importlib.util
 import pathlib
 import re
 import sys
@@ -677,15 +676,26 @@ def test_duplicate_citations_differing_only_in_case_report_once():
     assert len(validate(body, FakeNamespaces())) == 1
 
 
-def test_standalone_arc_citation_satisfies_the_shape_check():
-    """ARC was missing from ANCHOR_RE, so an ARC-only trace was rejected
-    before existence validation could run — even for an ARC id that exists."""
-    assert validate(_device_body("Traces to ARC-02."), FakeNamespaces()) == []
+def test_arc_alone_does_not_satisfy_the_dhf_trace_requirement():
+    """SDD §3: ARC-NN are SDD-internal structuring handles, "not controlled
+    document identifiers", and "shall not be cited as design-input or
+    design-output IDs". So an ARC-only trace must fail — even for an ARC id that
+    exists in the namespace. Checkable and citable are independent.
+    """
+    for trace in ("Traces to ARC-02.", "Traces to ARC-99."):
+        errors = validate(_device_body(trace), FakeNamespaces())
+        assert any("DHF Trace" in e for e in errors), (trace, errors)
 
 
-def test_standalone_nonexistent_arc_is_reported_as_missing():
-    errors = validate(_device_body("Traces to ARC-99."), FakeNamespaces())
+def test_arc_beside_a_valid_anchor_is_still_existence_checked():
+    """ARC cannot satisfy the requirement, but a bogus ARC id is not ignored."""
+    body = _device_body("SRS-02-04; ARC-99")
+    errors = validate(body, FakeNamespaces())
     assert any("ARC-99" in e and "does not exist" in e for e in errors), errors
+
+
+def test_existing_arc_beside_a_valid_anchor_is_accepted():
+    assert validate(_device_body("SRS-02-04; ARC-02"), FakeNamespaces()) == []
 
 
 def test_markdown_link_target_slug_is_not_a_citation():
@@ -784,10 +794,19 @@ def test_main_passes_without_dhf_root(monkeypatch, capsys):
 
 # --- integration with the real engine (skipped when it is not installed) -----
 
-@pytest.mark.skipif(
-    importlib.util.find_spec("vvtrace") is None,
-    reason="private vvtrace engine not installed",
-)
+# find_spec("vvtrace") is truthy for a *namespace* package — any stray directory
+# named vvtrace on sys.path — so the submodule has to actually import. Guarding
+# with find_spec("vvtrace.namespaces") is not enough either: it raises
+# ModuleNotFoundError when the parent is missing rather than returning None.
+try:
+    import vvtrace.namespaces as _vvtrace_namespaces  # noqa: F401
+
+    HAVE_VVTRACE = True
+except ImportError:
+    HAVE_VVTRACE = False
+
+
+@pytest.mark.skipif(not HAVE_VVTRACE, reason="private vvtrace engine not installed")
 def test_real_engine_namespace_shapes_match_the_fake():
     """Guard against the stub drifting from the engine it stands in for."""
     from vvtrace.namespaces import DhfNamespaces
