@@ -68,7 +68,13 @@ The workflow enforces:
   Safety Class and identify every affected device software item as
   `ARC-NN — Class A/B/C`.
 - Every selected class maps to an affected item, and every affected item's
-  class is selected. `C-adjacent` is rejected as a class.
+  class is selected. The mapping is read from `## Affected Device Software
+  Items` when that heading is present, and from the DHF Trace only when it is
+  absent, so trace prose that merely mentions an item is not read as a
+  declaration.
+- On any Thorne-scoped PR: `C-adjacent` is rejected as a class, Safety Class
+  `N/A` is not combined with a concrete class, and `TBD / blocked until
+  resolved` is not left checked.
 - Thorne-related PRs confirm the required boundary checklist items.
 
 ### Thorne PR Verification-Traceability Check

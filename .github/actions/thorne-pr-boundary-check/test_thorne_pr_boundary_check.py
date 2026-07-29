@@ -177,6 +177,51 @@ def test_pre_template_body_can_map_item_in_dhf_trace():
     assert validate(body) == []
 
 
+def test_dhf_trace_mention_does_not_inject_a_phantom_item_class():
+    """A trace legitimately mentions items it does not claim as affected."""
+    body = make_body(
+        ["Device function"],
+        ["Class B"],
+        MANDATORY_BOUNDARY_ITEMS,
+        "Per ADR-0010, ARC-04 remains the only Class C item; this changes capture.",
+        "- ARC-01 — Class B — reducer",
+    )
+    assert validate(body) == []
+
+
+def test_wrapped_item_mapping_error_names_the_one_line_requirement():
+    body = make_body(
+        ["Device function"],
+        ["Class C"],
+        MANDATORY_BOUNDARY_ITEMS,
+        "SDD §4",
+        "- ARC-04 —\n  Class C — persistence",
+    )
+    assert any("on one line" in e for e in validate(body))
+
+
+def test_na_with_concrete_class_is_rejected_outside_device_scopes():
+    body = make_body(
+        ["DHF/QMS artifact"],
+        ["N/A", "Class B"],
+        MANDATORY_BOUNDARY_ITEMS,
+        "CMP §§4.1, 6, and 9",
+        "- N/A — lifecycle tooling changes no ARC item",
+    )
+    assert any("Do not combine Safety Class N/A" in e for e in validate(body))
+
+
+def test_tbd_safety_class_is_rejected_outside_device_scopes():
+    body = make_body(
+        ["DHF/QMS artifact"],
+        ["TBD / blocked until resolved"],
+        MANDATORY_BOUNDARY_ITEMS,
+        "CMP §§4.1, 6, and 9",
+        "- N/A — lifecycle tooling changes no ARC item",
+    )
+    assert any("Resolve 'TBD / blocked until resolved'" in e for e in validate(body))
+
+
 def test_non_device_pr_does_not_require_dhf_trace():
     body = make_body(["Non-device function"], boundary_checked=MANDATORY_BOUNDARY_ITEMS, dhf_trace="<!-- n/a -->")
     assert validate(body) == []
