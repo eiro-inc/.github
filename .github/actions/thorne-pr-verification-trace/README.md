@@ -77,7 +77,7 @@ so the runner's own gitconfig is left untouched.
 | `src` | `.` | Path to the checked-out source to scan. |
 | `dhf-repo` | `eiro-inc/thorne-dhf` | Controlled DHF source. |
 | `dhf-ref` | `main` | DHF ref or commit SHA to validate against. |
-| `vvtrace-ref` | `6dcf5389…` (`v0.1.0`) | Engine **commit SHA** to install. Pin a SHA, not a tag: the engine repo has no tag protection, so a tag can move. |
+| `vvtrace-ref` | `a5bfdf31…` (`v0.2.0`) | Engine **commit SHA** to install. Pin a SHA, not a tag: the engine repo has no tag protection, so a tag can move. |
 | `artifact-name` | `vvtrace-manifests` | Manifest artifact name; override if the action runs twice in one job. |
 | `token` | — (required) | Read token for the DHF and the engine repo. |
 
