@@ -76,7 +76,13 @@ runs:
         # (success OR failure) via the trap, so the token is not left
         # retrievable by any later step in the caller's job. INSTALL_TOKEN is
         # read from env and is never interpolated into the script.
-        git config --global credential.helper 'cache --timeout=60'
+        #
+        # The timeout is a backstop, not the security property — that is the
+        # trap above. It has to outlast everything between the approve below and
+        # the last credential consumer: BOTH the DHF fetch and the engine
+        # install. Keep it generous, and re-check it if anything else moves
+        # inside that window.
+        git config --global credential.helper 'cache --timeout=300'
         trap 'git credential-cache exit >/dev/null 2>&1 || true; rm -f "$GIT_CONFIG_GLOBAL"' EXIT
         python -m pip install --upgrade pip
         printf 'protocol=https\nhost=github.com\nusername=x-access-token\npassword=%s\n\n' "$INSTALL_TOKEN" | git credential approve

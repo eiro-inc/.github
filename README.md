@@ -42,6 +42,26 @@ jobs:
 
 After adding the workflow, configure the repository's branch protection or organization ruleset to require the `thorne-pr-boundary-check` status check before merge.
 
+**DHF Trace: anchor existence (opt-in).** By default the DHF Trace section is tested for anchor *shape*, which accepts a well-formed but nonexistent id such as `SRS-77-77`. Pass a `dhf-token` to check cited ids against the controlled DHF instead (thorne-dhf#113 AC2):
+
+```yaml
+      - uses: eiro-inc/.github/.github/actions/thorne-pr-boundary-check@main
+        with:
+          dhf-token: ${{ secrets.DHF_READ_TOKEN }}
+```
+
+The token needs read access to `eiro-inc/thorne-dhf` and, while it is private, to `eiro-inc/thorne-vv-tooling` (the action installs the pinned `vvtrace` engine to load the DHF id namespaces). Omit the input and the action behaves exactly as before — no checkout, no install, stdlib only — so repositories adopt this one at a time rather than all at once.
+
+Only the families the engine has a namespace loader for are checked: **SRS, SDD, ARC, IFS, HAZ**. Everything else in the anchor vocabulary — ADR, CMP, DDS, TRM, UNS, VVP, DR, the `eiro-qms` families (SOP, POL, REC, FRM), `§` references and standard citations — has no DHF namespace and continues to be accepted on shape alone.
+
+Checkable and citable are separate things. `ARC-NN` handles are checkable, but SDD §3 records that they are not controlled document identifiers and "shall not be cited as design-input or design-output IDs" — so an ARC citation does **not** satisfy the DHF Trace requirement on its own, whether or not the id exists. It is still validated when it appears alongside a legitimate anchor, so a bogus `ARC-99` is not ignored.
+
+Three behaviors worth knowing before enabling it:
+
+- A cited id of a checkable family that the engine cannot classify is reported as **malformed**: the DHF writes zero-padded two-digit ids exclusively, so `HAZ-3` is flagged where `HAZ-03` passes, and `SRS-02-04-999` is flagged rather than being read as the existing `SRS-02-04`. Citations are matched case-insensitively and the family prefix is normalized, so `srs-02-04` validates as `SRS-02-04` — the check cannot be sidestepped by casing.
+- URL fragments are **not** citations. A trace that links to the document it cites (`[IFS-02](…/IFS.md#ifs-02--patient-data-capture)`) has its link target ignored; only the link text is checked. An all-alpha placeholder such as `SRS-XX-YY` is treated as narrative rather than an id, because catching it would mean flagging ordinary prose like "SRS-based"; on its own it still fails the shape check.
+- Once enabled, a DHF that cannot be fetched or read — or a pinned engine install that does not complete — **fails** the check rather than falling back to the shape-only test, so the gate never reports green having verified less than it was configured to. The engine is installed into a throwaway virtualenv, so a `vvtrace` that happens to exist on the runner cannot serve the check in place of the pinned build.
+
 **Pinning.** The example pins `@main`, which is convenient for everyday repositories (fixes propagate without per-repo PRs) but means the check semantics can change under a PR. Repositories that need reproducibility — for example a DHF repository preparing a regulatory submission — should pin to a release tag (e.g., `@v1`) once tags are cut, so a submission-gating PR is validated against a known-good state rather than whatever is on `main`.
 
 The workflow enforces:
