@@ -23,12 +23,12 @@ inputs:
     default: "main"
   vvtrace-ref:
     description: >-
-      Released engine commit to install. Defaults to the commit tagged v0.2.0.
+      Released engine commit to install. Defaults to the commit tagged v0.2.1.
       Pin to a commit SHA, not a tag or branch — a required gate must not change
       behavior as a ref moves, and the engine repo has no tag protection, so a
       tag is movable too.
     required: false
-    default: "a5bfdf315017a05e02928ed772ca6cf4f5de231d"
+    default: "542a6195a57d0a01bd8c4e26f968268451b2744e"
   artifact-name:
     description: >-
       Name of the uploaded manifest artifact. Override when a caller runs this
