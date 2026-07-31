@@ -8,11 +8,23 @@ The organization-level pull request template includes Thorne-specific sections f
 
 - Thorne scope classification.
 - DHF trace anchors.
-- Safety class declaration.
+- Affected device software-item (`ARC-NN`) and safety-class mapping.
 - Verification evidence.
 - Boundary confirmations for the device/non-device membrane.
 
 Repositories inherit this template unless they define a repository-local `.github/pull_request_template.md`.
+
+The automatic **device lane** and the declared **product-function scope** are
+separate axes. A PR can correctly select `Non-device function` plus
+`Multiple-Function impact assessment` while using the device lane and naming an
+unsegregated affected item such as `ARC-04 — Class C`. Safety class follows the
+affected software item; “C-adjacent” is not a safety class.
+
+Internal build, test, deployment, and lifecycle tooling is neither a device nor
+a non-device product function merely because its files select the device lane.
+Such a PR selects `DHF/QMS artifact`, traces the tooling and its consuming use to
+CMP §§4.1, 6, and 9, identifies any affected ARC item, and selects Safety Class
+`N/A` when no device software item is affected.
 
 ## Composite Actions
 
@@ -72,7 +84,17 @@ The workflow enforces:
 - At least one Thorne Scope item is checked.
 - `Not Thorne-related` is not combined with Thorne-specific scope items.
 - DHF Trace text is non-placeholder when the PR touches device function, Multiple-Function impact assessment, pre-design scaffolding, or DHF/QMS artifacts.
-- Device-function PRs select at least one Safety Class item other than `N/A`.
+- Device-function and Multiple-Function-impact PRs select at least one concrete
+  Safety Class and identify every affected device software item as
+  `ARC-NN — Class A/B/C`.
+- Every selected class maps to an affected item, and every affected item's
+  class is selected. The mapping is read from `## Affected Device Software
+  Items` when that heading is present, and from the DHF Trace only when it is
+  absent, so trace prose that merely mentions an item is not read as a
+  declaration.
+- On any Thorne-scoped PR: `C-adjacent` is rejected as a class, Safety Class
+  `N/A` is not combined with a concrete class, and `TBD / blocked until
+  resolved` is not left checked.
 - Thorne-related PRs confirm the required boundary checklist items.
 
 ### Thorne PR Verification-Traceability Check
