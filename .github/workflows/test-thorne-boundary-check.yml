@@ -4,12 +4,14 @@ on:
   pull_request:
     paths:
       - ".github/actions/thorne-pr-boundary-check/**"
+      - ".github/actions/thorne-a11y-check/**"
       - ".github/actions/dependabot-thorne-inject/**"
       - ".github/workflows/test-thorne-boundary-check.yml"
   push:
     branches: [main]
     paths:
       - ".github/actions/thorne-pr-boundary-check/**"
+      - ".github/actions/thorne-a11y-check/**"
       - ".github/actions/dependabot-thorne-inject/**"
 
 jobs:
@@ -20,6 +22,7 @@ jobs:
       matrix:
         action:
           - thorne-pr-boundary-check
+          - thorne-a11y-check
           - dependabot-thorne-inject
     steps:
       - uses: actions/checkout@v4
