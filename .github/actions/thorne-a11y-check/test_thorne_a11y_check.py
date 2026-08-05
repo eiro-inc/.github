@@ -225,6 +225,43 @@ def test_appended_bullet_cannot_stand_in_for_na_lead():
     assert any("Tick exactly one Accessibility lead box" in e for e in errs)
 
 
+def test_bare_na_note_cannot_stand_in_for_na_lead():
+    # Blocker 2: with both leads unticked, a plausible appended bullet that
+    # starts with "N/A" but omits the template phrase must NOT satisfy the gate.
+    body = make_body(lead=())
+    body = body.replace(
+        "</details>\n",
+        "- [x] N/A for the design-token rename\n</details>\n",
+        1,
+    )
+    errs = validate_accessibility(body)
+    assert any("Tick exactly one Accessibility lead box" in e for e in errs)
+
+
+def test_fenced_checkboxes_do_not_confirm():
+    # Blocker 1: an all-ticked block pasted inside a ``` fence renders as inert
+    # code on GitHub, so it must not confirm the checklist.
+    body = make_body(lead=("changes",), present_ids=(), checked_ids=())
+    forged = "```\n- [x] " + LEAD_UI + "\n"
+    for item_id in HUMAN_ITEM_IDS:
+        forged += "- [x] " + _ITEM_TEXT[item_id] + "\n"
+    forged += "```\n"
+    body = body.replace("</details>\n", forged + "</details>\n", 1)
+    errs = validate_accessibility(body)
+    assert any("missing checklist item(s)" in e for e in errs)
+
+
+def test_indented_code_checkboxes_do_not_confirm():
+    # Blocker 1: a >= 4-space-indented task list is a code block, not a checklist.
+    body = make_body(lead=("changes",), present_ids=(), checked_ids=())
+    indented = "".join(
+        "    - [x] " + _ITEM_TEXT[item_id] + "\n" for item_id in HUMAN_ITEM_IDS
+    )
+    body = body.replace("</details>\n", indented + "</details>\n", 1)
+    errs = validate_accessibility(body)
+    assert any("missing checklist item(s)" in e for e in errs)
+
+
 def test_single_line_listing_all_ids_confirms_none():
     # Finding 1 (aggregated): one line citing every ID must confirm none of them
     # — each item has to be its own distinct ticked line.
@@ -337,6 +374,8 @@ def test_lead_kind_classifies_leads_and_items():
     assert lead_kind("**TYPE-03** *(web)* — N/A — no user-facing UI change") is None
     # A sentence merely containing the phrase is not a lead.
     assert lead_kind("Confirmed no user-facing UI change in this refactor") is None
+    # A bare "N/A" note without the template phrase is not the N/A lead.
+    assert lead_kind("N/A for the design-token rename") is None
 
 
 def test_sole_item_id_requires_exactly_one():
@@ -399,6 +438,20 @@ def test_parse_ui_globs_warns_on_miscased_key():
     assert warnings and "lowercase 'ui:'" in warnings[0]
 
 
+def test_parse_ui_globs_warns_on_nested_key():
+    # Suggestion 2: an indented `ui:` (e.g. nested under a `lanes:` parent) is
+    # not the top-level key the parser reads; it must warn, not silently pass.
+    globs, saw_key, warnings = parse_ui_globs('lanes:\n  ui:\n    - "src/**"\n')
+    assert globs == [] and saw_key is False
+    assert warnings and "top-level" in warnings[0]
+
+
+def test_parse_ui_globs_top_level_block_list_items_are_not_nested_keys():
+    # A well-formed top-level block list must not trip the nested-key warning.
+    globs, saw_key, warnings = parse_ui_globs('ui:\n  - "src/ui/**"\n')
+    assert globs == ["src/ui/**"] and saw_key is True and warnings == []
+
+
 def test_parse_ui_globs_preserves_hash_in_glob():
     # A '#' with no leading space is part of the glob, not a comment.
     globs, _, _ = parse_ui_globs('ui:\n  - "src/c#/**"\n')
@@ -458,6 +511,16 @@ def test_is_web_path():
     assert is_web_path("packages/patient/Button.svelte")
     assert not is_web_path("app/src/main/kotlin/x/ui/Home.kt")
     assert not is_web_path("app/src/main/res/values/strings.xml")
+
+
+def test_is_web_path_recognizes_framework_and_markup_files():
+    # Suggestion 1: React/Vue/Astro/plain-HTML files are web, so TYPE-03 is not
+    # silently optional on a repo whose UI surface is those file types.
+    assert is_web_path("apps/web/app/page.tsx")
+    assert is_web_path("src/App.jsx")
+    assert is_web_path("src/components/Card.vue")
+    assert is_web_path("src/pages/index.astro")
+    assert is_web_path("public/index.html")
 
 
 # --- determine_ui_surface ---------------------------------------------------

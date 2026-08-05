@@ -166,6 +166,37 @@ def _strip_comments(text):
     return re.sub(r"<!--.*?-->", "", text or "", flags=re.DOTALL)
 
 
+def _strip_code(text):
+    """Drop fenced code blocks and >= 4-space-indented code lines.
+
+    :func:`section_bodies` is fence- and indent-aware for *boundary* detection,
+    but the slice it returns still contains those regions verbatim. Without this
+    a task-list line pasted inside a ``` fence or indented as code would be
+    counted by :func:`checkbox_lines` even though GitHub renders it as inert
+    code — the same gap the fence-aware section scan closes for headings and
+    closers. The scan here mirrors that logic so checkbox extraction sees only
+    what a reader sees rendered.
+    """
+    out = []
+    in_fence = False
+    fence_char = None
+    for line in (text or "").split("\n"):
+        stripped = line.lstrip(" ")
+        indent = len(line) - len(stripped)
+        fence = _FENCE_RE.match(stripped)
+        if fence and indent < 4:
+            marker = fence.group(1)[0]
+            if not in_fence:
+                in_fence, fence_char = True, marker
+            elif marker == fence_char:
+                in_fence, fence_char = False, None
+            continue  # the fence line itself is never a checkbox
+        if in_fence or indent >= 4:
+            continue
+        out.append(line)
+    return "\n".join(out)
+
+
 def checkbox_lines(section_text):
     """Return ``(ticked, text)`` for each task-list line, in document order.
 
@@ -189,14 +220,16 @@ def lead_kind(text):
 
     A line carrying *any* stable item ID is an item line, never a lead — so a
     web-annotated ``**TYPE-03** *(web)* — N/A …`` item cannot be misread as the
-    N/A lead. The lead phrases are anchored at the *start* of the line (after
-    stripping emphasis), so an ordinary sentence that merely contains the words
-    "no user-facing UI change" further down cannot stand in for a lead box.
+    N/A lead. Both lead phrases are anchored at the *start* of the line (after
+    stripping emphasis) **and** must carry their distinguishing template phrase,
+    so neither an ordinary sentence that merely mentions the words nor a bare
+    ``N/A …`` note (e.g. ``N/A for the design-token rename``) appended to the
+    section can stand in for a lead box.
     """
     if _ITEM_ID_RE.search(text):
         return None
     plain = _plain(text)
-    if plain.startswith("n/a") or plain == "na" or plain.startswith("na "):
+    if plain.startswith(("n/a", "na")) and "no user-facing ui change" in plain:
         return "na"
     if plain.startswith("this pr changes user-facing ui") or plain.startswith(
         "changes user-facing ui"
@@ -261,7 +294,7 @@ def validate_accessibility(body, required_ids=HUMAN_ITEM_IDS):
             "feedback that quotes the checklist) makes the declaration ambiguous."
         ]
 
-    lines = checkbox_lines(_strip_comments(bodies[0]))
+    lines = checkbox_lines(_strip_code(_strip_comments(bodies[0])))
     errors = []
 
     # Lead boxes, matched per-line so an item line or an incidental bullet
@@ -338,6 +371,11 @@ GITHUB_API = "https://api.github.com"
 # cannot be seen from paths alone and are a documented gap.
 HEURISTIC_WEB_GLOBS = (
     "**/*.svelte",
+    "**/*.tsx",
+    "**/*.jsx",
+    "**/*.vue",
+    "**/*.astro",
+    "**/*.html",
     "**/*.css",
     "**/*.scss",
     "**/src/routes/**",
@@ -418,6 +456,19 @@ def parse_ui_globs(yaml_text):
                 f"Found a top-level '{miscased.group(1)}' key in {LANES_PATH}; the "
                 "UI-lane key is lowercase 'ui:'. As written this repo declares no "
                 "'ui:' block — fix the casing if a UI surface was intended."
+            )
+
+        # An indented / nested `ui:` (e.g. under a `lanes:` parent) is not the
+        # top-level key this minimal parser reads, so it would silently resolve
+        # no UI surface. Warn, mirroring the mis-cased path. The `ui` must follow
+        # the indentation directly, so a list item (`- "glob"`) is not matched.
+        nested = re.match(r"^\s+ui\s*:", line)
+        if nested and not saw_key:
+            warnings.append(
+                f"Found an indented 'ui:' key in {LANES_PATH}; the UI-lane key "
+                "must be top-level (column 0). As written this repo declares no "
+                "'ui:' block — move it to the top level if a UI surface was "
+                "intended."
             )
 
         if in_list:
