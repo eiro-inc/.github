@@ -1,0 +1,38 @@
+name: Thorne A11y Check
+description: >-
+  Require the Thorne PR template's ## Accessibility declaration on UI PRs.
+  Accessibility cuts the UI/non-UI axis (a different axis from the device lanes
+  enforced by thorne-pr-boundary-check); the UI lane is chosen automatically
+  from the ui: globs in the repo's .github/thorne-lanes.yml.
+
+inputs:
+  run-review-a11y:
+    description: >-
+      Reserved. When a headless CI runner for the review-a11y skill exists, set
+      to "true" to also run its static machine checks (emitting per-line
+      annotations by stable ID) alongside this section-presence gate. Until then
+      the required check is the pure-Python ## Accessibility presence gate only,
+      and any value other than "false" is a no-op that emits a notice.
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Validate PR Accessibility declaration
+      shell: bash
+      env:
+        PR_BODY: ${{ github.event.pull_request.body }}
+        GH_TOKEN: ${{ github.token }}
+        REPO: ${{ github.repository }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        BASE_REF: ${{ github.event.pull_request.base.ref }}
+      run: python3 "${GITHUB_ACTION_PATH}/thorne_a11y_check.py"
+
+    - name: review-a11y static checks (reserved)
+      if: ${{ inputs.run-review-a11y != 'false' }}
+      shell: bash
+      run: |
+        echo "::notice::run-review-a11y requested, but no headless CI runner for the" \
+             "review-a11y skill is wired yet. Run the skill locally against this PR" \
+             "(eiro-compliance-tools). Tracking: thorne-product#57 follow-up."
