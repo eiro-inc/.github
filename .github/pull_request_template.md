@@ -67,6 +67,7 @@ unsegregated device software item.
 - [ ] Class B
 - [ ] Class C
 - [ ] N/A
+- [ ] C-adjacent integrity control
 - [ ] TBD / blocked until resolved
 
 ## Verification Tests
