@@ -67,6 +67,12 @@ unsegregated device software item.
 - [ ] Class B
 - [ ] Class C
 - [ ] N/A
+- [ ] C-adjacent integrity control
+<!-- Do NOT select "C-adjacent integrity control" — per ADR-0010 it is not a
+     software safety class. The line exists only for compatibility with pinned
+     checker revisions that require its presence (#33; pin convergence: #29).
+     On older pinned checkers a lone non-N/A tick satisfies the device-function
+     safety requirement, so selecting it can mask a missing real class. -->
 - [ ] TBD / blocked until resolved
 
 ## Verification Tests
