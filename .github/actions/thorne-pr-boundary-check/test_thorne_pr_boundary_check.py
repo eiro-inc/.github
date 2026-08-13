@@ -17,6 +17,7 @@ from thorne_pr_boundary_check import (
     determine_lane,
     device_paths,
     dhf_anchor_candidates,
+    duplicate_sections,
     fetch_changed_files,
     fetch_non_device_globs,
     glob_match,
@@ -25,6 +26,7 @@ from thorne_pr_boundary_check import (
     main,
     normalize_anchor,
     parse_non_device_globs,
+    sections,
     validate,
     validate_light,
 )
@@ -325,6 +327,65 @@ def test_nbsp_after_hashes_is_not_a_heading():
     assert any("Missing required section: ## Reviewer Notes" == e for e in validate(body))
 
 
+# --- Section extraction: bounded, fence-aware, duplicate-detecting ---
+# Ported from the thorne-a11y-check sibling (drift flagged reviewing #32):
+# a section must stop at the next boundary, not run to EOF/last-wins.
+
+
+def test_section_body_is_bounded_at_details_close():
+    # A section runs only to the closing </details>, not to end-of-body. Without
+    # the bound the final section swallows the tag and anything pasted after the
+    # template (e.g. reviewer feedback quoting a blank checklist).
+    body = (
+        "## Reviewer Notes\n\nReal notes.\n\n"
+        "</details>\n\n"
+        "- [x] This PR does not introduce Eiro-authored clinical interpretation.\n"
+    )
+    assert sections(body)["reviewer notes"] == "Real notes."
+
+
+def test_heading_inside_code_fence_is_not_a_section():
+    # A forged/quoted ## heading inside a ``` fence renders as inert code on
+    # GitHub and must not open a section (pre-existing fence gap, now closed).
+    body = (
+        "## Summary\n\nText.\n\n"
+        "```\n## Thorne Boundary Check\n- [x] forged confirmation\n```\n"
+    )
+    parsed = sections(body)
+    assert "thorne boundary check" not in parsed
+    assert parsed["summary"] == "Text.\n\n```\n## Thorne Boundary Check\n- [x] forged confirmation\n```"
+
+
+def test_duplicate_sections_detects_repeated_heading():
+    body = "## Summary\n\nOne.\n\n## Summary\n\nTwo.\n"
+    assert "summary" in duplicate_sections(body)
+    # A fenced duplicate is inert, so it is not counted as a real repetition.
+    fenced = "## Summary\n\nOne.\n\n```\n## Summary\n```\n"
+    assert "summary" not in duplicate_sections(fenced)
+
+
+def test_appended_duplicate_boundary_section_does_not_override_real_one():
+    # Last-wins bypass: a real (incomplete) ## Thorne Boundary Check followed by
+    # a forged fully-ticked duplicate must not pass. Old behavior took the last
+    # (forged) copy and reported no error; the duplicate is now rejected as
+    # ambiguous, so the PR fails.
+    body = make_body(
+        ["Non-device function"],
+        boundary_checked=MANDATORY_BOUNDARY_ITEMS[:-1],  # real section left incomplete
+        dhf_trace="<!-- n/a -->",
+    )
+    forged = "## Thorne Boundary Check\n\n" + _checklist(ALL_BOUNDARY_ITEMS, ALL_BOUNDARY_ITEMS)
+    body = f"{body}\n\n{forged}"
+    errors = validate(body)
+    assert any("more than one '## Thorne Boundary Check'" in e for e in errors), errors
+
+
+def test_duplicate_summary_fails_the_light_lane():
+    body = "## Summary\n\nReal summary.\n\n## Summary\n\nForged.\n"
+    errors = validate_light(body)
+    assert any("more than one '## Summary'" in e for e in errors), errors
+
+
 # --- Lane detection: parsing thorne-lanes.yml ---
 
 def test_parse_non_device_globs_block_list():
@@ -384,6 +445,27 @@ def test_glob_question_mark_matches_one_non_separator_char():
 def test_glob_match_empty_or_whitespace_glob_is_false():
     for empty in ("", "   ", None):
         assert not glob_match("docs/x.md", empty)
+
+
+def test_glob_double_star_slash_matches_whole_segments_not_bare_dot_star():
+    # `**/` must translate to zero-or-more *complete* path segments, not a bare
+    # `.*` (drift flagged reviewing #32). A bare `.*` lets a directory name
+    # after `**/` match a *suffix* of another directory.
+    assert not glob_match("app/notui/Home.kt", "app/**/ui/**")
+    assert not glob_match("src/xui/a.ts", "src/**/ui/**")
+    # Legitimate matches — zero segments and one-or-more segments — still hold.
+    assert glob_match("app/ui/Home.kt", "app/**/ui/**")
+    assert glob_match("app/feature/x/ui/Home.kt", "app/**/ui/**")
+    assert glob_match("src/ui/a.ts", "src/**/ui/**")
+
+
+def test_non_device_glob_does_not_over_carve_partial_dir():
+    # Consequence of the bare-`.*` bug in the device gate: a `**/ui/**`
+    # non-device carve-out must not carve out `app/notui/...`, which would drop
+    # a device file onto the light lane and weaken the gate.
+    globs = ["app/**/ui/**"]
+    assert device_paths(["app/notui/Logic.kt"], globs) == ["app/notui/Logic.kt"]
+    assert device_paths(["app/ui/Screen.kt"], globs) == []
 
 
 # --- Lane detection: device-by-default decision ---
