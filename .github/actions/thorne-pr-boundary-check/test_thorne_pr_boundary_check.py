@@ -14,6 +14,7 @@ from thorne_pr_boundary_check import (
     SAFETY_CLASS_ITEMS,
     THORNE_SCOPE_ITEMS,
     DhfUnavailable,
+    checked_items,
     determine_lane,
     device_paths,
     dhf_anchor_candidates,
@@ -304,11 +305,12 @@ def test_extra_whitespace_in_heading_still_discovered():
 
 
 def test_indented_heading_does_not_hijack_real_section():
-    # An indented ``## Thorne Boundary Check`` (e.g. a template example inside
-    # Reviewer Notes) is list-continuation text, not a heading. It must not
-    # overwrite the real section: a body whose real Boundary Check is missing a
-    # mandatory confirmation still fails, even when a fully-ticked indented
-    # duplicate follows it.
+    # A 1-3 space indented ``## Thorne Boundary Check`` IS a real H2 to GitHub, so
+    # the parser now recognizes it too (a column-0-only rule would let an attacker
+    # suppress a genuine visible heading by indenting it). A fully-ticked indented
+    # duplicate must not silently pass the PR: the real Boundary Check is missing a
+    # mandatory confirmation (read first-wins), and the indented copy is caught as
+    # an ambiguous duplicate — the PR fails on both counts, never on the forged one.
     body = make_body(
         ["Non-device function"],
         boundary_checked=MANDATORY_BOUNDARY_ITEMS[:-1],  # real section left incomplete
@@ -316,7 +318,9 @@ def test_indented_heading_does_not_hijack_real_section():
     )
     decoy = "   ## Thorne Boundary Check\n\n" + _checklist(ALL_BOUNDARY_ITEMS, ALL_BOUNDARY_ITEMS)
     body = f"{body}\n\n{decoy}"
-    assert any("must confirm boundary item" in e for e in validate(body))
+    errors = validate(body)
+    assert any("must confirm boundary item" in e for e in errors), errors
+    assert any("more than one '## Thorne Boundary Check'" in e for e in errors), errors
 
 
 def test_nbsp_after_hashes_is_not_a_heading():
@@ -325,6 +329,49 @@ def test_nbsp_after_hashes_is_not_a_heading():
     body = make_body(["Non-device function"], boundary_checked=MANDATORY_BOUNDARY_ITEMS, dhf_trace="<!-- n/a -->")
     body = body.replace("## Reviewer Notes", "##\u00a0Reviewer Notes")
     assert any("Missing required section: ## Reviewer Notes" == e for e in validate(body))
+
+
+def test_leading_space_heading_is_recognized():
+    # CommonMark/GitHub accept 0-3 leading spaces on an ATX heading; ``>= 4`` is
+    # indented code. A column-0-only parser misses a 1-3 space heading that GitHub
+    # renders, which is a *suppression* primitive (the genuine visible declaration
+    # is silently dropped and no duplicate is recorded).
+    for indent in ("", " ", "  ", "   "):
+        assert "thorne scope" in sections(f"{indent}## Thorne Scope\n\n- [x] Device function\n")
+    # Four spaces is indented code, not a heading \u2014 still ignored.
+    assert "thorne scope" not in sections("    ## Thorne Scope\n\n- [x] Device function\n")
+
+
+def test_repeated_comment_opener_on_one_line_hides_forged_section():
+    # HTML comments can repeat on a line: ``<!-- ok --> <!-- hide`` closes the
+    # first and opens a second, so the line ends inside a comment and GitHub
+    # renders everything below as nothing. Taking only the first ``<!--`` (which
+    # closes) missed the second opener and read the hidden ``## heading`` as real.
+    body = (
+        "## Summary\n\nText.\n\n"
+        "<!-- ok --> <!-- hide\n## Thorne Scope\n- [x] Non-device function\n-->\n"
+    )
+    assert "thorne scope" not in sections(body)
+
+
+def test_reopened_comment_suppression_composite_fails_the_device_gate():
+    # The review-body composite with no visual tell: indent the genuine
+    # ## Thorne Scope one space (renders as a real H2 ticking Device function) and
+    # hide a forged ``Non-device function`` copy inside ``<!-- ok --> <!-- hide -->``.
+    # Pre-fix, both parser/renderer disagreements combined so the gate read only
+    # {'Non-device function'} and passed with 0 errors. The gate must now read the
+    # genuine {'Device function'} and hold it to its device obligations \u2014 here an
+    # unselected concrete Safety Class fails it closed.
+    body = make_body(["Device function"], safety=(), boundary_checked=MANDATORY_BOUNDARY_ITEMS, dhf_trace="DDS \u00a75")
+    body = body.replace("## Thorne Scope", " ## Thorne Scope", 1)
+    forged = (
+        "<!-- ok --> <!-- hide\n## Thorne Scope\n"
+        + _checklist(sorted(THORNE_SCOPE_ITEMS), ["Non-device function"])
+        + "\n-->"
+    )
+    body = f"{body}\n\n{forged}"
+    assert checked_items(sections(body)["thorne scope"]) == {"Device function"}
+    assert any("concrete Safety Class" in e for e in validate(body))
 
 
 # --- Section extraction: bounded, fence-aware, duplicate-detecting ---
