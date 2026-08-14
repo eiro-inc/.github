@@ -326,10 +326,16 @@ def normalize_heading(text):
 # a required section. Headings and ``</details>`` closers inside fenced code or
 # indented (>= 4-space) code are ignored, so forged or quoted markup cannot open,
 # extend, or forge a section (this closes the pre-existing "``## X`` inside a
-# fence still parses" gap). A duplicated heading is reported as ambiguous by the
-# callers (via :func:`duplicate_sections`) rather than silently resolved
-# last-wins.
-_FENCE_RE = re.compile(r"^(`{3,}|~{3,})")
+# fence still parses" gap). Fence tracking follows CommonMark closely enough to
+# deny the forge: an opening fence records its run length, and a closer only ends
+# the block when it uses the same marker, is *at least as long* as the opener,
+# and carries no info string — so a too-short or info-bearing "closer" (which
+# GitHub keeps inside the code block) cannot end our fence early and leak a hidden
+# ``## heading`` below it. Likewise a ``## heading`` hidden inside a multi-line
+# ``<!-- ... -->`` HTML comment (which GitHub renders as nothing) is ignored. A
+# duplicated heading is reported as ambiguous by the callers (via
+# :func:`duplicate_sections`) rather than silently resolved last-wins.
+_FENCE_RE = re.compile(r"^(`{3,}|~{3,})(.*)$")
 _ATX_H2_RE = re.compile(r"^##[ \t]+(.+?)[ \t]*$")
 _DETAILS_CLOSE_RE = re.compile(r"(?i)^</details>\s*$")
 
@@ -339,27 +345,52 @@ def _scan_sections(markdown):
 
     Returns ``(lines, headings, boundaries)``: ``headings`` is a list of
     ``(line_index, normalized_title)`` for every column-0 ``## heading`` that is
-    not inside fenced or indented code; ``boundaries`` is the sorted list of line
-    indices that terminate a section (every heading and every column-0
-    ``</details>``).
+    not inside fenced or indented code or an HTML comment; ``boundaries`` is the
+    sorted list of line indices that terminate a section (every heading and every
+    column-0 ``</details>``).
     """
     lines = (markdown or "").split("\n")
     in_fence = False
     fence_char = None
+    fence_len = 0
+    in_comment = False
     headings = []  # (line_index, normalized_title)
     boundaries = []  # line indices that terminate a section
     for idx, line in enumerate(lines):
+        if in_comment:
+            # Inside a multi-line ``<!-- ... -->`` HTML comment: every line is
+            # inert (GitHub renders nothing) until the ``-->`` closer.
+            if "-->" in line:
+                in_comment = False
+            continue
         stripped = line.lstrip(" ")
         indent = len(line) - len(stripped)
         fence = _FENCE_RE.match(stripped)
         if fence and indent < 4:
             marker = fence.group(1)[0]
-            if not in_fence:
-                in_fence, fence_char = True, marker
-            elif marker == fence_char:
-                in_fence, fence_char = False, None
-            continue
+            length = len(fence.group(1))
+            info = fence.group(2)
+            if in_fence:
+                # A closing fence uses the same marker, is at least as long as
+                # the opener, and carries no info string. GitHub keeps the block
+                # open otherwise, so a shorter or info-bearing "closer" must not
+                # end our fence early and leak a hidden ``## heading`` below it.
+                if marker == fence_char and length >= fence_len and not info.strip():
+                    in_fence, fence_char, fence_len = False, None, 0
+                continue
+            # A backtick opening fence's info string may not contain a backtick
+            # (CommonMark), so such a line does not open a fence — fall through
+            # and treat it as ordinary text rather than swallowing what follows.
+            if not (marker == "`" and "`" in info):
+                in_fence, fence_char, fence_len = True, marker, length
+                continue
         if in_fence or indent >= 4:
+            continue
+        # An HTML comment that opens on this line and does not close on it hides
+        # its ``## headings`` (GitHub renders nothing) until the ``-->`` line.
+        open_at = line.find("<!--")
+        if open_at != -1 and "-->" not in line[open_at + 4 :]:
+            in_comment = True
             continue
         atx = _ATX_H2_RE.match(line)
         if atx:

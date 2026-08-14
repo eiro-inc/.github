@@ -356,6 +356,45 @@ def test_heading_inside_code_fence_is_not_a_section():
     assert parsed["summary"] == "Text.\n\n```\n## Thorne Boundary Check\n- [x] forged confirmation\n```"
 
 
+def test_short_fence_closer_does_not_end_the_block():
+    # A closing fence must be at least as long as its opener (CommonMark). A
+    # 4-backtick block "closed" by 3 backticks stays open on GitHub, so a
+    # ``## heading`` after the short closer renders as inert code and must not
+    # open a section. Old logic closed on any marker-matching line and leaked it.
+    body = "````\n```\n## Thorne Scope\n- [x] Non-device function\n````\n"
+    assert "thorne scope" not in sections(body)
+
+
+def test_infostring_fence_closer_does_not_end_the_block():
+    # A closing fence carries no info string (CommonMark). ``` ```python ``` is a
+    # new opener's info line, not a closer, so the block stays open on GitHub and
+    # a ``## heading`` below it is inert. Old logic treated it as a closer and
+    # leaked the hidden ticked section.
+    body = "```\n```python\n## Thorne Scope\n- [x] Non-device function\n```\n"
+    assert "thorne scope" not in sections(body)
+
+
+def test_heading_inside_html_comment_is_not_a_section():
+    # A ``## heading`` hidden inside a multi-line ``<!-- ... -->`` comment renders
+    # as nothing on GitHub and must not open a section — otherwise its body
+    # (``- [x] ...\n-->``) has no complete comment pair for ``substantive_text``
+    # to strip and the forged tick counts.
+    body = "<!--\n## Thorne Scope\n- [x] Non-device function\n-->\n"
+    assert "thorne scope" not in sections(body)
+
+
+def test_comment_hidden_scope_fails_the_device_gate():
+    # End-to-end: dropping the real ## Thorne Scope and hiding a fully-ticked copy
+    # in an HTML comment must fail closed (missing required section), not pass on
+    # the forged tick.
+    body = make_body(
+        ["Device function"], ["Class B"], MANDATORY_BOUNDARY_ITEMS, drop_sections=("Thorne Scope",)
+    )
+    forged = "<!--\n## Thorne Scope\n" + _checklist(sorted(THORNE_SCOPE_ITEMS), ["Non-device function"]) + "\n-->"
+    body = f"{body}\n\n{forged}"
+    assert any("Missing required section: ## Thorne Scope" == e for e in validate(body))
+
+
 def test_duplicate_sections_detects_repeated_heading():
     body = "## Summary\n\nOne.\n\n## Summary\n\nTwo.\n"
     assert "summary" in duplicate_sections(body)
