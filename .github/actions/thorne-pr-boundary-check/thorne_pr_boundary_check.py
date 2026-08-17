@@ -305,24 +305,173 @@ def normalize_heading(text):
     return collapse_whitespace(text).lower()
 
 
+# --- Section extraction (bounded, fence/indent-aware, duplicate-detecting) ---
+#
+# Ported from the ``thorne-a11y-check`` sibling so the two gates read PR sections
+# the same way (the drift these three functions close was flagged reviewing
+# eiro-inc/.github#32). A section body runs from just after its ``## heading`` to
+# the first of: the next column-0 ``##`` heading, a column-0 ``</details>``, or
+# end of body.
+#
+# Bounding at ``</details>`` matters because the org template renders the
+# device-lane sections inside a ``<details>`` wrapper — without the bound the
+# final section (``## Reviewer Notes``) would run to end-of-body and swallow the
+# closing tag and anything appended after the template (e.g. pasted review
+# feedback that quotes a blank checklist).
+#
+# ATX headings are recognized with 0-3 leading spaces and a literal space or tab
+# after ``##`` (matching CommonMark/GitHub; ``>= 4`` leading spaces is indented
+# code and is ignored). Column-0-only was tempting as hardening, but it hands an
+# attacker a *suppression* primitive: a one-space-indented ``## Thorne Scope`` is
+# a real H2 to GitHub yet invisible to a column-0 parser, so the genuine visible
+# declaration is silently dropped and no duplicate is recorded (flagged reviewing
+# eiro-inc/.github#34). ``[ \t]`` (not ``\s``) after ``##`` still means a bare
+# ``##`` or ``##`` + non-breaking space — which GitHub renders as plain text —
+# cannot forge a required section. Headings and ``</details>`` closers inside
+# fenced code or indented (>= 4-space) code are ignored, so forged or quoted
+# markup cannot open, extend, or forge a section (this closes the pre-existing
+# "``## X`` inside a fence still parses" gap). Fence tracking follows CommonMark
+# closely enough to deny the forge: an opening fence records its run length, and
+# a closer only ends
+# the block when it uses the same marker, is *at least as long* as the opener,
+# and carries no info string — so a too-short or info-bearing "closer" (which
+# GitHub keeps inside the code block) cannot end our fence early and leak a hidden
+# ``## heading`` below it. Likewise a ``## heading`` hidden inside a multi-line
+# ``<!-- ... -->`` HTML comment (which GitHub renders as nothing) is ignored,
+# including when several comments share a line (``<!-- ok --> <!-- hide`` closes
+# the first and opens a second). A duplicated heading is reported as ambiguous by
+# the callers (via :func:`duplicate_sections`) rather than silently resolved
+# last-wins.
+_FENCE_RE = re.compile(r"^(`{3,}|~{3,})(.*)$")
+_ATX_H2_RE = re.compile(r"^ {0,3}##[ \t]+(.+?)[ \t]*$")
+_DETAILS_CLOSE_RE = re.compile(r"(?i)^</details>\s*$")
+
+
+def _scan_sections(markdown):
+    """Fence/indent-aware line scan of the PR body.
+
+    Returns ``(lines, headings, boundaries)``: ``headings`` is a list of
+    ``(line_index, normalized_title)`` for every column-0 ``## heading`` that is
+    not inside fenced or indented code or an HTML comment; ``boundaries`` is the
+    sorted list of line indices that terminate a section (every heading and every
+    column-0 ``</details>``).
+    """
+    lines = (markdown or "").split("\n")
+    in_fence = False
+    fence_char = None
+    fence_len = 0
+    in_comment = False
+    headings = []  # (line_index, normalized_title)
+    boundaries = []  # line indices that terminate a section
+    for idx, line in enumerate(lines):
+        if in_comment:
+            # Inside a multi-line ``<!-- ... -->`` HTML comment: every line is
+            # inert (GitHub renders nothing) until the ``-->`` closer.
+            if "-->" in line:
+                in_comment = False
+            continue
+        stripped = line.lstrip(" ")
+        indent = len(line) - len(stripped)
+        fence = _FENCE_RE.match(stripped)
+        if fence and indent < 4:
+            marker = fence.group(1)[0]
+            length = len(fence.group(1))
+            info = fence.group(2)
+            if in_fence:
+                # A closing fence uses the same marker, is at least as long as
+                # the opener, and carries no info string. GitHub keeps the block
+                # open otherwise, so a shorter or info-bearing "closer" must not
+                # end our fence early and leak a hidden ``## heading`` below it.
+                if marker == fence_char and length >= fence_len and not info.strip():
+                    in_fence, fence_char, fence_len = False, None, 0
+                continue
+            # A backtick opening fence's info string may not contain a backtick
+            # (CommonMark), so such a line does not open a fence — fall through
+            # and treat it as ordinary text rather than swallowing what follows.
+            if not (marker == "`" and "`" in info):
+                in_fence, fence_char, fence_len = True, marker, length
+                continue
+        if in_fence or indent >= 4:
+            continue
+        # An HTML comment that opens on this line and is not closed before the
+        # line ends hides its ``## headings`` (GitHub renders nothing) until a
+        # later ``-->``. Comments can repeat on a line — ``<!-- ok --> <!-- hide``
+        # closes the first and opens a second — so consume every ``<!-- ... -->``
+        # pair and enter comment state only if an opener is left unclosed. Taking
+        # just the first ``<!--`` would miss a later unclosed opener and read a
+        # ``## heading`` GitHub hides as a real (forged) section.
+        rest = line
+        opens_comment = False
+        while True:
+            open_at = rest.find("<!--")
+            if open_at == -1:
+                break
+            after = rest[open_at + 4 :]
+            close_at = after.find("-->")
+            if close_at == -1:
+                opens_comment = True
+                break
+            rest = after[close_at + 3 :]
+        if opens_comment:
+            in_comment = True
+            continue
+        atx = _ATX_H2_RE.match(line)
+        if atx:
+            headings.append((idx, normalize_heading(atx.group(1))))
+            boundaries.append(idx)
+        elif _DETAILS_CLOSE_RE.match(line):
+            boundaries.append(idx)
+    boundaries.sort()
+    return lines, headings, boundaries
+
+
+def _body_after(lines, heading_index, boundaries):
+    """Text from just after a heading to the next boundary (or EOF), stripped."""
+    end = len(lines)
+    for boundary in boundaries:
+        if boundary > heading_index:
+            end = boundary
+            break
+    return "\n".join(lines[heading_index + 1 : end]).strip()
+
+
 def sections(markdown):
-    """Map normalized ``## heading`` -> section body text."""
+    """Map normalized ``## heading`` -> section body text.
+
+    First occurrence wins when a heading repeats; callers that must reject an
+    ambiguous duplicate use :func:`duplicate_sections`. Bounded and fence/indent
+    aware — see the module comment above.
+    """
+    lines, headings, boundaries = _scan_sections(markdown)
     found = {}
-    # ATX headings only at column 0, with a literal space or tab after ``##``.
-    # Deliberately stricter than CommonMark's 0-3 leading spaces: an indented
-    # ``##`` line is list-continuation text, not a heading, and honoring it would
-    # let an example heading inside Reviewer Notes overwrite (last-wins) the real
-    # section and pass a PR that confirmed nothing. ``[ \t]`` (not ``\s``) so a
-    # bare ``##`` before a newline, or ``##`` + non-breaking space — which GitHub
-    # renders as plain text, not a heading — cannot forge a required section.
-    # Known gap (pre-existing): ``## X`` inside a fenced code block still parses.
-    matches = list(re.finditer(r"(?m)^##[ \t]+(.+?)[ \t]*$", markdown))
-    for index, match in enumerate(matches):
-        title = match.group(1)
-        start = match.end()
-        end = matches[index + 1].start() if index + 1 < len(matches) else len(markdown)
-        found[normalize_heading(title)] = markdown[start:end].strip()
+    for h_idx, title in headings:
+        if title not in found:
+            found[title] = _body_after(lines, h_idx, boundaries)
     return found
+
+
+def duplicate_sections(markdown):
+    """Normalized ``## headings`` that appear more than once.
+
+    A duplicated heading makes that section ambiguous: a forged or pasted second
+    copy must neither silently override the real one (last-wins) nor be
+    overridden by it (first-wins). Callers reject a duplicated section they
+    consume rather than trusting either occurrence.
+    """
+    _lines, headings, _boundaries = _scan_sections(markdown)
+    seen = set()
+    dups = set()
+    for _idx, title in headings:
+        (dups if title in seen else seen).add(title)
+    return dups
+
+
+def _duplicate_section_error(section):
+    return (
+        f"Found more than one '## {section}' section in the PR body. Keep exactly "
+        "one — a duplicate heading (for example pasted review feedback that quotes "
+        "the checklist) makes the declaration ambiguous."
+    )
 
 
 def checked_items(section_text):
@@ -432,6 +581,8 @@ def validate_new_dependencies(body, manifest_hits):
         return [DEPENDENCY_CHECK_UNAVAILABLE]
     if not manifest_hits:
         return []
+    if normalize_heading(NEW_DEPENDENCIES_SECTION) in duplicate_sections(body or ""):
+        return [_duplicate_section_error(NEW_DEPENDENCIES_SECTION)]
     parsed = sections(body or "")
     text = substantive_text(parsed.get(normalize_heading(NEW_DEPENDENCIES_SECTION), ""))
     bare = text.lower().strip("-*_ .!\t")
@@ -461,11 +612,15 @@ def validate(body, namespaces=None):
         # Short-circuit: one actionable error instead of one-per-section noise.
         return ["PR body is empty. Use the organization Thorne PR template."]
     parsed = sections(body)
+    dups = duplicate_sections(body)
     errors = []
 
     for section in REQUIRED_SECTIONS:
-        if normalize_heading(section) not in parsed:
+        heading = normalize_heading(section)
+        if heading not in parsed:
             errors.append(f"Missing required section: ## {section}")
+        elif heading in dups:
+            errors.append(_duplicate_section_error(section))
 
     checkbox_expected = {
         "Thorne Scope": THORNE_SCOPE_ITEMS,
@@ -525,6 +680,8 @@ def validate(body, namespaces=None):
             # traces. Reading the trace only as a fallback also lets the
             # transition allowance lapse on its own once the heading is standard.
             affected_heading = normalize_heading(AFFECTED_ITEM_SECTION)
+            if affected_heading in dups:
+                errors.append(_duplicate_section_error(AFFECTED_ITEM_SECTION))
             if affected_heading in parsed:
                 affected_text = substantive_text(parsed[affected_heading])
                 affected_source = "## Affected Device Software Items"
@@ -607,6 +764,8 @@ def validate_light(body, actor=""):
     """Non-device (light) lane: require only a non-empty ``## Summary`` or whitelisted actor."""
     if is_whitelisted(actor):
         return []
+    if normalize_heading("Summary") in duplicate_sections(body or ""):
+        return [_duplicate_section_error("Summary")]
     parsed = sections(body or "")
     if not substantive_text(parsed.get(normalize_heading("Summary"), "")):
         return [
@@ -665,6 +824,11 @@ def _glob_to_regex(glob):
 
     ``**`` matches across directory separators (any depth); ``*`` matches
     within a single path segment; ``?`` matches one non-separator character.
+
+    ``**/`` translates to *zero or more complete path segments* (``(?:.*/)?``),
+    not a bare ``.*`` — otherwise a directory name after ``**/`` could match a
+    *suffix* of another directory (``app/**/ui/**`` matching ``app/notui/…``),
+    over-carving a device file onto the light lane.
     """
     i, n = 0, len(glob)
     out = ["^"]
@@ -675,7 +839,9 @@ def _glob_to_regex(glob):
                 i += 2
                 if i < n and glob[i] == "/":
                     i += 1
-                out.append(".*")
+                    out.append("(?:.*/)?")  # zero or more whole segments
+                else:
+                    out.append(".*")
             else:
                 out.append("[^/]*")
                 i += 1

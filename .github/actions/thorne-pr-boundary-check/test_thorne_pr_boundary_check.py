@@ -14,9 +14,11 @@ from thorne_pr_boundary_check import (
     SAFETY_CLASS_ITEMS,
     THORNE_SCOPE_ITEMS,
     DhfUnavailable,
+    checked_items,
     determine_lane,
     device_paths,
     dhf_anchor_candidates,
+    duplicate_sections,
     fetch_changed_files,
     fetch_non_device_globs,
     glob_match,
@@ -25,6 +27,7 @@ from thorne_pr_boundary_check import (
     main,
     normalize_anchor,
     parse_non_device_globs,
+    sections,
     validate,
     validate_light,
 )
@@ -302,11 +305,12 @@ def test_extra_whitespace_in_heading_still_discovered():
 
 
 def test_indented_heading_does_not_hijack_real_section():
-    # An indented ``## Thorne Boundary Check`` (e.g. a template example inside
-    # Reviewer Notes) is list-continuation text, not a heading. It must not
-    # overwrite the real section: a body whose real Boundary Check is missing a
-    # mandatory confirmation still fails, even when a fully-ticked indented
-    # duplicate follows it.
+    # A 1-3 space indented ``## Thorne Boundary Check`` IS a real H2 to GitHub, so
+    # the parser now recognizes it too (a column-0-only rule would let an attacker
+    # suppress a genuine visible heading by indenting it). A fully-ticked indented
+    # duplicate must not silently pass the PR: the real Boundary Check is missing a
+    # mandatory confirmation (read first-wins), and the indented copy is caught as
+    # an ambiguous duplicate — the PR fails on both counts, never on the forged one.
     body = make_body(
         ["Non-device function"],
         boundary_checked=MANDATORY_BOUNDARY_ITEMS[:-1],  # real section left incomplete
@@ -314,7 +318,9 @@ def test_indented_heading_does_not_hijack_real_section():
     )
     decoy = "   ## Thorne Boundary Check\n\n" + _checklist(ALL_BOUNDARY_ITEMS, ALL_BOUNDARY_ITEMS)
     body = f"{body}\n\n{decoy}"
-    assert any("must confirm boundary item" in e for e in validate(body))
+    errors = validate(body)
+    assert any("must confirm boundary item" in e for e in errors), errors
+    assert any("more than one '## Thorne Boundary Check'" in e for e in errors), errors
 
 
 def test_nbsp_after_hashes_is_not_a_heading():
@@ -323,6 +329,147 @@ def test_nbsp_after_hashes_is_not_a_heading():
     body = make_body(["Non-device function"], boundary_checked=MANDATORY_BOUNDARY_ITEMS, dhf_trace="<!-- n/a -->")
     body = body.replace("## Reviewer Notes", "##\u00a0Reviewer Notes")
     assert any("Missing required section: ## Reviewer Notes" == e for e in validate(body))
+
+
+def test_leading_space_heading_is_recognized():
+    # CommonMark/GitHub accept 0-3 leading spaces on an ATX heading; ``>= 4`` is
+    # indented code. A column-0-only parser misses a 1-3 space heading that GitHub
+    # renders, which is a *suppression* primitive (the genuine visible declaration
+    # is silently dropped and no duplicate is recorded).
+    for indent in ("", " ", "  ", "   "):
+        assert "thorne scope" in sections(f"{indent}## Thorne Scope\n\n- [x] Device function\n")
+    # Four spaces is indented code, not a heading \u2014 still ignored.
+    assert "thorne scope" not in sections("    ## Thorne Scope\n\n- [x] Device function\n")
+
+
+def test_repeated_comment_opener_on_one_line_hides_forged_section():
+    # HTML comments can repeat on a line: ``<!-- ok --> <!-- hide`` closes the
+    # first and opens a second, so the line ends inside a comment and GitHub
+    # renders everything below as nothing. Taking only the first ``<!--`` (which
+    # closes) missed the second opener and read the hidden ``## heading`` as real.
+    body = (
+        "## Summary\n\nText.\n\n"
+        "<!-- ok --> <!-- hide\n## Thorne Scope\n- [x] Non-device function\n-->\n"
+    )
+    assert "thorne scope" not in sections(body)
+
+
+def test_reopened_comment_suppression_composite_fails_the_device_gate():
+    # The review-body composite with no visual tell: indent the genuine
+    # ## Thorne Scope one space (renders as a real H2 ticking Device function) and
+    # hide a forged ``Non-device function`` copy inside ``<!-- ok --> <!-- hide -->``.
+    # Pre-fix, both parser/renderer disagreements combined so the gate read only
+    # {'Non-device function'} and passed with 0 errors. The gate must now read the
+    # genuine {'Device function'} and hold it to its device obligations \u2014 here an
+    # unselected concrete Safety Class fails it closed.
+    body = make_body(["Device function"], safety=(), boundary_checked=MANDATORY_BOUNDARY_ITEMS, dhf_trace="DDS \u00a75")
+    body = body.replace("## Thorne Scope", " ## Thorne Scope", 1)
+    forged = (
+        "<!-- ok --> <!-- hide\n## Thorne Scope\n"
+        + _checklist(sorted(THORNE_SCOPE_ITEMS), ["Non-device function"])
+        + "\n-->"
+    )
+    body = f"{body}\n\n{forged}"
+    assert checked_items(sections(body)["thorne scope"]) == {"Device function"}
+    assert any("concrete Safety Class" in e for e in validate(body))
+
+
+# --- Section extraction: bounded, fence-aware, duplicate-detecting ---
+# Ported from the thorne-a11y-check sibling (drift flagged reviewing #32):
+# a section must stop at the next boundary, not run to EOF/last-wins.
+
+
+def test_section_body_is_bounded_at_details_close():
+    # A section runs only to the closing </details>, not to end-of-body. Without
+    # the bound the final section swallows the tag and anything pasted after the
+    # template (e.g. reviewer feedback quoting a blank checklist).
+    body = (
+        "## Reviewer Notes\n\nReal notes.\n\n"
+        "</details>\n\n"
+        "- [x] This PR does not introduce Eiro-authored clinical interpretation.\n"
+    )
+    assert sections(body)["reviewer notes"] == "Real notes."
+
+
+def test_heading_inside_code_fence_is_not_a_section():
+    # A forged/quoted ## heading inside a ``` fence renders as inert code on
+    # GitHub and must not open a section (pre-existing fence gap, now closed).
+    body = (
+        "## Summary\n\nText.\n\n"
+        "```\n## Thorne Boundary Check\n- [x] forged confirmation\n```\n"
+    )
+    parsed = sections(body)
+    assert "thorne boundary check" not in parsed
+    assert parsed["summary"] == "Text.\n\n```\n## Thorne Boundary Check\n- [x] forged confirmation\n```"
+
+
+def test_short_fence_closer_does_not_end_the_block():
+    # A closing fence must be at least as long as its opener (CommonMark). A
+    # 4-backtick block "closed" by 3 backticks stays open on GitHub, so a
+    # ``## heading`` after the short closer renders as inert code and must not
+    # open a section. Old logic closed on any marker-matching line and leaked it.
+    body = "````\n```\n## Thorne Scope\n- [x] Non-device function\n````\n"
+    assert "thorne scope" not in sections(body)
+
+
+def test_infostring_fence_closer_does_not_end_the_block():
+    # A closing fence carries no info string (CommonMark). ``` ```python ``` is a
+    # new opener's info line, not a closer, so the block stays open on GitHub and
+    # a ``## heading`` below it is inert. Old logic treated it as a closer and
+    # leaked the hidden ticked section.
+    body = "```\n```python\n## Thorne Scope\n- [x] Non-device function\n```\n"
+    assert "thorne scope" not in sections(body)
+
+
+def test_heading_inside_html_comment_is_not_a_section():
+    # A ``## heading`` hidden inside a multi-line ``<!-- ... -->`` comment renders
+    # as nothing on GitHub and must not open a section — otherwise its body
+    # (``- [x] ...\n-->``) has no complete comment pair for ``substantive_text``
+    # to strip and the forged tick counts.
+    body = "<!--\n## Thorne Scope\n- [x] Non-device function\n-->\n"
+    assert "thorne scope" not in sections(body)
+
+
+def test_comment_hidden_scope_fails_the_device_gate():
+    # End-to-end: dropping the real ## Thorne Scope and hiding a fully-ticked copy
+    # in an HTML comment must fail closed (missing required section), not pass on
+    # the forged tick.
+    body = make_body(
+        ["Device function"], ["Class B"], MANDATORY_BOUNDARY_ITEMS, drop_sections=("Thorne Scope",)
+    )
+    forged = "<!--\n## Thorne Scope\n" + _checklist(sorted(THORNE_SCOPE_ITEMS), ["Non-device function"]) + "\n-->"
+    body = f"{body}\n\n{forged}"
+    assert any("Missing required section: ## Thorne Scope" == e for e in validate(body))
+
+
+def test_duplicate_sections_detects_repeated_heading():
+    body = "## Summary\n\nOne.\n\n## Summary\n\nTwo.\n"
+    assert "summary" in duplicate_sections(body)
+    # A fenced duplicate is inert, so it is not counted as a real repetition.
+    fenced = "## Summary\n\nOne.\n\n```\n## Summary\n```\n"
+    assert "summary" not in duplicate_sections(fenced)
+
+
+def test_appended_duplicate_boundary_section_does_not_override_real_one():
+    # Last-wins bypass: a real (incomplete) ## Thorne Boundary Check followed by
+    # a forged fully-ticked duplicate must not pass. Old behavior took the last
+    # (forged) copy and reported no error; the duplicate is now rejected as
+    # ambiguous, so the PR fails.
+    body = make_body(
+        ["Non-device function"],
+        boundary_checked=MANDATORY_BOUNDARY_ITEMS[:-1],  # real section left incomplete
+        dhf_trace="<!-- n/a -->",
+    )
+    forged = "## Thorne Boundary Check\n\n" + _checklist(ALL_BOUNDARY_ITEMS, ALL_BOUNDARY_ITEMS)
+    body = f"{body}\n\n{forged}"
+    errors = validate(body)
+    assert any("more than one '## Thorne Boundary Check'" in e for e in errors), errors
+
+
+def test_duplicate_summary_fails_the_light_lane():
+    body = "## Summary\n\nReal summary.\n\n## Summary\n\nForged.\n"
+    errors = validate_light(body)
+    assert any("more than one '## Summary'" in e for e in errors), errors
 
 
 # --- Lane detection: parsing thorne-lanes.yml ---
@@ -384,6 +531,27 @@ def test_glob_question_mark_matches_one_non_separator_char():
 def test_glob_match_empty_or_whitespace_glob_is_false():
     for empty in ("", "   ", None):
         assert not glob_match("docs/x.md", empty)
+
+
+def test_glob_double_star_slash_matches_whole_segments_not_bare_dot_star():
+    # `**/` must translate to zero-or-more *complete* path segments, not a bare
+    # `.*` (drift flagged reviewing #32). A bare `.*` lets a directory name
+    # after `**/` match a *suffix* of another directory.
+    assert not glob_match("app/notui/Home.kt", "app/**/ui/**")
+    assert not glob_match("src/xui/a.ts", "src/**/ui/**")
+    # Legitimate matches — zero segments and one-or-more segments — still hold.
+    assert glob_match("app/ui/Home.kt", "app/**/ui/**")
+    assert glob_match("app/feature/x/ui/Home.kt", "app/**/ui/**")
+    assert glob_match("src/ui/a.ts", "src/**/ui/**")
+
+
+def test_non_device_glob_does_not_over_carve_partial_dir():
+    # Consequence of the bare-`.*` bug in the device gate: a `**/ui/**`
+    # non-device carve-out must not carve out `app/notui/...`, which would drop
+    # a device file onto the light lane and weaken the gate.
+    globs = ["app/**/ui/**"]
+    assert device_paths(["app/notui/Logic.kt"], globs) == ["app/notui/Logic.kt"]
+    assert device_paths(["app/ui/Screen.kt"], globs) == []
 
 
 # --- Lane detection: device-by-default decision ---
