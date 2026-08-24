@@ -2,6 +2,8 @@
 
 This repository provides organization-default GitHub templates and reusable workflows for Eiro Inc. repositories.
 
+> **Thorne transition (decision date 2026-08-24):** The FDA-submission design programme is moving to controlled closeout. Engineering should use the [Thorne Engineering Cutover](THORNE_ENGINEERING_CUTOVER.md) as the team-facing operating guide once the authority PRs named there merge. The device-era details below describe still-installed legacy checks during the no-gap overlap; they are not instructions to expand the suspended DHF.
+
 ## Thorne Pull Request Template
 
 The organization-level pull request template includes Thorne-specific sections for:
