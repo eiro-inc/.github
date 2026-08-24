@@ -11,7 +11,7 @@ This is the short operating guide for engineering while Eiro moves from the FDA-
 - Do not create new submission-directed DHF requirements, design outputs, architecture decisions, trace rows, `@verifies` mappings, verification-renewal work, validation plans, or phase-exit material.
 - Build launch work in the engineering and product repositories using ordinary issues, specifications, tests, code review, security review, accessibility review, and release evidence.
 - Do not treat P4 as complete, enter P5/P6, or describe the product as FDA approved, cleared, exempt, confirmed, or otherwise accepted by FDA.
-- PRs `thorne-dhf#271`, `#273`, and `#274` are not new authority. They are to close unmerged after the successor engineering PR is linked.
+- PRs `thorne-dhf#271`, `#273`, and `#274` are the bounded final pre-cutover hardening set. They merge before DR-0012; afterward their content is retained history, not authority to start new submission work.
 
 ## Work that may continue in the old DHF
 
