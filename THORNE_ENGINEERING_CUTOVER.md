@@ -29,7 +29,7 @@ A DHF change outside this list needs a revised DR-0012 before work starts. Suspe
 
 The transition removes submission paperwork, not the product boundary.
 
-1. **Medication-adherence floor.** Medication-adherence tracking is the sole asserted device-function basis for the commercial RTM strategy. It must remain real, prominent, and used by every activated patient. Removing it, making it optional, de-emphasizing it, or materially changing it requires Product Boundary Standard and counsel review.
+1. **Medication-adherence floor.** Medication-adherence functionality is the candidate device-function basis in the commercial RTM hypothesis, pending counsel's feature-fit and device-status conclusions. It must remain real and prominent in the activated-patient experience. Removing it, making it optional, de-emphasizing it, materially changing it, or adding dosing-schedule behavior to pursue product code NXQ requires Product Boundary Standard and counsel review. Do not present NXQ fit or RTM eligibility as settled.
 2. **A001 ceiling.** Do not expand product behavior or claims beyond the exact A001/Q261559 and counsel envelope. Transport, display, deterministic published scoring, symptom capture, and safety-screening flags are not offered as the RTM device predicate.
 3. **No new clinical interpretation.** Do not add Eiro-authored salience, severity, urgency, patient-status assignment, triage, treatment recommendation, or ML in a clinical-output path without boundary, safety, instrument-rights, and claims review.
 4. **Preserve the alert envelope and score fidelity.** Crisis/no-detection behavior, score calculation or display, and validated-instrument rules are not ordinary copy or refactor changes.
