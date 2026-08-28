@@ -40,7 +40,7 @@ The transition removes submission paperwork, not the product boundary.
 
 ## Review routing
 
-Until [POL-006](https://github.com/eiro-inc/eiro-qms/blob/main/policies/POL-006-thorne-product-boundary.md) and [`thorne-safety-reviewers`](https://github.com/eiro-inc/eiro-qms/blob/main/records/product-safety/thorne-safety-reviewers.md), being issued in [eiro-qms#704](https://github.com/eiro-inc/eiro-qms/pull/704), are effective, retain the existing Thorne boundary check. Apply documented review against the exact A001/Q261559 envelope and HAZ Revision 12. The Product Boundary Owner obtains any required counsel review and records its basis; a qualified reviewer approves the current head. In addition to ordinary owner review, flag any PR touching one of these areas before merge:
+Until POL-006 and `thorne-safety-reviewers`, being issued in [eiro-qms#704](https://github.com/eiro-inc/eiro-qms/pull/704), are effective, retain the existing Thorne boundary check. Apply documented review against the exact A001/Q261559 envelope and HAZ Revision 12. The Product Boundary Owner obtains any required counsel review and records its basis; a qualified reviewer approves the current head. In addition to ordinary owner review, flag any PR touching one of these areas before merge:
 
 - medication adherence;
 - crisis paths or no-detection copy/behavior;
@@ -76,12 +76,12 @@ Forrest Laine owns the product-requirements set. Colin Walsh is the primary Prod
 
 ## Launch gates are unchanged
 
-The cutover does not authorize external claims, production PHI, enrollment, or live-claim support. REC-116 Decision 9 controls the sequence directly:
+The cutover does not authorize external claims, production PHI, enrollment, or live-claim support. [REC-116 Decision 9](https://github.com/eiro-inc/eiro-qms/blob/main/records/management-review/REC-116-thorne-commercial-cutover.md) controls the sequence directly. The paths below are the authoritative homes assigned by REC-116 §5.1; items marked forthcoming are intentionally not linked until their controlled records exist.
 
-- The [claims inventory and initial claims review](https://github.com/eiro-inc/eiro-qms/tree/main/records/claims) (forthcoming) precede external claims.
-- [POL-004](https://github.com/eiro-inc/eiro-qms/blob/main/policies/POL-004-hipaa.md) (forthcoming) and the [whole-estate Security Risk Assessment](https://github.com/eiro-inc/eiro-qms/blob/main/records/security/thorne-security-risk-assessment.md) (forthcoming) precede production PHI.
-- Authorized F1 and F20 closure in the [first-enrollment Product Safety Release Record](https://github.com/eiro-inc/eiro-qms/tree/main/records/product-safety) precedes enrollment.
-- The controlled [counsel regulatory-posture opinion](https://github.com/eiro-inc/eiro-qms/tree/main/records/regulatory) and [billing rehearsal decision](https://github.com/eiro-inc/eiro-qms/tree/main/records/billing) (both forthcoming) precede live-claim support.
+- The claims inventory and initial claims review (`eiro-qms/records/claims/`, forthcoming) precede external claims.
+- POL-004 (`eiro-qms/policies/POL-004-hipaa.md`, forthcoming) and the whole-estate Security Risk Assessment (`eiro-qms/records/security/thorne-security-risk-assessment.md`, forthcoming) precede production PHI.
+- Authorized F1 and F20 closure in the first-enrollment Product Safety Release Record (`eiro-qms/records/product-safety/`, forthcoming) precedes enrollment.
+- The controlled counsel regulatory-posture opinion (`eiro-qms/records/regulatory/`, forthcoming) and billing rehearsal decision (`eiro-qms/records/billing/`, forthcoming) precede live-claim support.
 
 These correspond to G1–G5 in the Fall 2026 commercial plan; the controlled homes above, not the working-plan shorthand alone, govern release.
 
