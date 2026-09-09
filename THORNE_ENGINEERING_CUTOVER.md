@@ -6,12 +6,12 @@
 
 **Owner:** Forrest Laine
 
-This is the short operating guide for engineering under Eiro's controlled closeout of the FDA-submission design programme and the Fall 2026 commercial plan. It is not a regulatory classification opinion and does not replace the controlled authority records. If it conflicts with REC-116 Revision 1, DR-0012 Revision 1, or DDP Revision 23, those records control.
+This is the short operating guide for engineering under Eiro's controlled closeout of the FDA-submission design programme and the Fall 2026 commercial plan. It is not a regulatory classification opinion and does not replace the controlled authority records. If it conflicts with the current approved revisions of REC-116, DR-0012, or DDP, those records control.
 
 ## What changed at cutover
 
 - Do not create new submission-directed DHF requirements, design outputs, architecture decisions, TRM entries, verification-renewal work, validation plans, or phase-exit material.
-- Keep tagging tests that verify a requirement with `@verifies SRS-NN-MM`. The tag now points to `thorne-product/design/product-requirements.md`, being issued in [thorne-product#182](https://github.com/eiro-inc/thorne-product/pull/182). Until that migration merges, retain existing tags and identifiers without creating new DHF work. After cutover the tag carries no DHF obligation, no traceability-matrix administration, and no merge gate; it remains because knowing which test covers which requirement is useful engineering practice.
+- Retain useful requirement/test links. Existing `@verifies SRS-NN-MM` tags resolve as history in `thorne-product/design/legacy-srs-requirements.md`; re-decided requirements use `thorne-product/docs/requirements.md` and `REQ-` identifiers. No DHF artifact or TRM administration is required for ordinary engineering.
 - Build launch work in the engineering and product repositories using ordinary issues, specifications, tests, code review, security review, accessibility review, and release evidence.
 - Do not treat P4 as complete, enter P5/P6, or describe the product as FDA approved, cleared, exempt, confirmed, or otherwise accepted by FDA.
 - The bounded final pre-cutover hardening set has merged: `thorne-dhf#271` issued VVP-01 Revision 15, `#273` issued ADR-0018 Revision 1, and `#274` issued CMP Revision 10. Their content is retained history, not authority to start new submission work.
@@ -38,35 +38,19 @@ The transition removes submission paperwork, not the product boundary.
 4. **Preserve the alert envelope and score fidelity.** Crisis/no-detection behavior, score calculation or display, and validated-instrument rules are not ordinary copy or refactor changes.
 5. **Preserve data and money-path integrity.** Activation, adherence days, time, contacts, consent, audit history, packet generation, and reconciliation must remain deterministic, attributable, and testable.
 
-## Review routing
+## Pull requests and review
 
-Until POL-006 and `thorne-safety-reviewers`, being issued in [eiro-qms#704](https://github.com/eiro-inc/eiro-qms/pull/704), are effective, retain the existing Thorne boundary check. Apply documented review against the exact A001/Q261559 envelope and HAZ Revision 12. The Product Boundary Owner obtains any required counsel review and records its basis; a qualified reviewer approves the current head. In addition to ordinary owner review, flag any PR touching one of these areas before merge:
+Use the short PR template: Summary, Testing, and optional Reviewer notes. Explain the actual change and test results; link an issue when useful. Do not require device-lane, DHF-trace, safety-class, boundary or accessibility declarations. For consequential clinical, scoring, data-integrity or billing changes, obtain the relevant qualified non-author review through the existing PR process under POL-006 §6. Preserve owner review and useful tests.
 
-- medication adherence;
-- crisis paths or no-detection copy/behavior;
-- score calculation, score display, instrument rules, or clinical-output ML;
-- alert, flag, urgency, priority, salience, or patient-status behavior; or
-- data-integrity and money paths, including activation, consent, day/time/contact ledgers, audit history, or billing packets.
+The retirement PR set in [#43](https://github.com/eiro-inc/.github/issues/43) aligns POL-006 and the controlled cutover records, removes declaration workflows and their required statuses, and updates local templates and automated PR bodies. Merge the controlled changes first and remove only the retired status requirements alongside each caller migration. Publish the shared short template after consumers are compatible. Retain historical action releases; do not deploy a replacement form checker.
 
-Once effective, POL-006 §6 is the Safety-Path Review Checklist and `thorne-safety-reviewers` supplies the qualified reviewer. Such a PR requires that reviewer's approval on the current PR head. A general owner approval or author self-attestation does not satisfy this route.
+Accessibility review belongs with the actual UI change and relevant testing. The retired accessibility declaration checker checked boxes, not rendered UI. Screen-reader, keyboard, text scaling, contrast, and other applicable checks remain engineering work.
 
-Ordinary test-file changes do not require a named V&V merge approver. Expressly routed safety and money-path changes do require their qualified reviewer's approval on the current head. This is the two-part successor principle retained from [ADR-0018](https://github.com/eiro-inc/thorne-dhf/blob/main/04-outputs/decisions/ADR-0018-verification-evidence-path-review.md).
-
-## Pull requests during the overlap
-
-The existing organization template and pinned boundary action still mechanically require four device-era fields in some repositories: **DHF Trace**, **Affected Device Software Items**, **Safety Class**, and **SDD Deviation**. Complete them only as needed to pass the still-live gate; do not generate new DHF artifacts merely to satisfy them. The Accessibility section and accessibility-review workflow remain. The four named fields and submission-directed verification-trace workflows are removed only after:
-
-1. the QMS and DHF authority records are effective — completed by REC-116 Revision 1 and DR-0012 Revision 1/DDP Revision 23;
-2. POL-006, its §6 routing, the safety-reviewer registry, and the Product Safety Risk Register are effective and deliberately tested; and
-3. the Product Boundary Owner records a one-time checklist in the coordinated removal PR showing that (a) each live safety rule and supporting test is linked from the Product Safety Risk Register and first-enrollment Product Safety Release Record, and (b) each billing rule and supporting test is linked from the versioned evidence index under `thorne-product/design/`. The check passes only when every rule has an owner, live source, implementation/test anchor, and no unresolved control gap; the removal PR and its linked evidence are the retained record.
-
-This temporary overlap is intentional. It prevents a gap in boundary or safety review while allowing the team to stop expanding the submission file.
-
-This PR publishes the guide and can close C3. It does not itself close C1 or all of MR-3 because it does not remove the four fields or pinned actions. [eiro-qms#715](https://github.com/eiro-inc/eiro-qms/issues/715) and [eiro-qms#708](https://github.com/eiro-inc/eiro-qms/issues/708) remain open through the coordinated removal and validation wave.
+The retirement assessment records removed checks and retained substantive controls. It does not close safety findings or authorize enrollment, PHI use, or billing. The risk register remains release knowledge rather than a universal merge gate.
 
 ## Keeping the live records honest
 
-The successor product requirements (`thorne-product/design/product-requirements.md`) and Thorne Product Safety Risk Register are controlled knowledge sources, not universal merge gates. The named-reviewer routing above has the teeth. Because the records do not block every merge, someone must deliberately check them before each release:
+The live product requirements (`thorne-product/docs/requirements.md`) and Thorne Product Safety Risk Register are controlled knowledge sources, not universal merge gates. The named-reviewer routing above has the teeth. Because the records do not block every merge, someone must deliberately check them before each release:
 
 1. Did the release change behavior described by a product requirement? If yes, update the requirement in the same release or open an issue that identifies the inaccurate requirement and blocks reliance on it.
 2. Did the release change, add, or remove a control cited by a Product Safety Risk Register entry, or introduce a new way the product could mislead a clinician or patient? If yes, the Product Safety Owner reviews and updates the register before release.

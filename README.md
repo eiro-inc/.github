@@ -1,3 +1,7 @@
+# Shared engineering templates and retained actions
+
+Use the short PR template: Summary, Testing, optional Reviewer notes. The boundary and accessibility declaration actions below are retained for historical callers/releases during the coordinated retirement in [#43](https://github.com/eiro-inc/.github/issues/43). Do not deploy new callers. Their setup instructions describe legacy behavior, not the current target workflow. Owner review and executable product, security and accessibility tests remain.
+
 # GitHub Templates for Eiro Inc. QMS
 
 This repository provides organization-default GitHub templates and reusable workflows for Eiro Inc. repositories.

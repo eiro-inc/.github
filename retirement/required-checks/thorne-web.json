@@ -1,0 +1,68 @@
+{
+  "repository": "eiro-inc/thorne-web",
+  "captured_at": "2026-09-09T18:00:38.709794+00:00",
+  "method": "PATCH",
+  "endpoint": "repos/eiro-inc/thorne-web/branches/main/protection/required_status_checks",
+  "before": {
+    "strict": false,
+    "checks": [
+      {
+        "context": "Dependency scan / Dependency review",
+        "app_id": 15368
+      },
+      {
+        "context": "thorne-pr-boundary-check",
+        "app_id": 15368
+      },
+      {
+        "context": "GitGuardian Security Checks",
+        "app_id": 46505
+      },
+      {
+        "context": "owner-review",
+        "app_id": 4250994
+      },
+      {
+        "context": "Build & type-check",
+        "app_id": 15368
+      },
+      {
+        "context": "Lint",
+        "app_id": 15368
+      },
+      {
+        "context": "Unit / component tests",
+        "app_id": 15368
+      }
+    ]
+  },
+  "after": {
+    "strict": false,
+    "checks": [
+      {
+        "context": "Dependency scan / Dependency review",
+        "app_id": 15368
+      },
+      {
+        "context": "GitGuardian Security Checks",
+        "app_id": 46505
+      },
+      {
+        "context": "owner-review",
+        "app_id": 4250994
+      },
+      {
+        "context": "Build & type-check",
+        "app_id": 15368
+      },
+      {
+        "context": "Lint",
+        "app_id": 15368
+      },
+      {
+        "context": "Unit / component tests",
+        "app_id": 15368
+      }
+    ]
+  }
+}
