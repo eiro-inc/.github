@@ -68,8 +68,12 @@ unsegregated device software item.
 - [ ] Class C
 - [ ] N/A
 - [ ] C-adjacent integrity control
-<!-- Do NOT select "C-adjacent integrity control" — per ADR-0010 it is not a
-     software safety class. The line exists only for compatibility with pinned
+<!-- Do NOT select "C-adjacent integrity control": it is not a software safety
+     class. IEC 62304:2006/Amd 1:2015 §4.3 defines the classes as A, B, and C;
+     there is no fourth. Classification is governed by SOP-005 §6.
+     (Provenance: this was recorded in thorne-dhf ADR-0010; the classification
+     is unchanged, only the controlling citation moves.)
+     The line exists only for compatibility with pinned
      checker revisions that require its presence (#33; pin convergence: #29).
      On older pinned checkers a lone non-N/A tick satisfies the device-function
      safety requirement, so selecting it can mask a missing real class. -->
