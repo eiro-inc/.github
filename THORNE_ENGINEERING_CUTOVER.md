@@ -40,13 +40,13 @@ The transition removes submission paperwork, not the product boundary.
 
 ## Pull requests and review
 
-Use the short PR template: Summary, Testing, and optional Reviewer notes. Explain the actual change and test results; link an issue when useful. Do not require device-lane, DHF-trace, safety-class, boundary or accessibility declarations. For consequential clinical, scoring, data-integrity or billing changes, obtain the relevant qualified non-author review through the existing PR process under POL-006 §6. Preserve owner review and useful tests.
+Use the short PR template: Summary, Testing, and optional Reviewer notes. Explain the actual change and test results; link an issue when useful. Do not require device-lane, DHF-trace, safety-class, boundary or accessibility declarations. For consequential clinical, scoring, data-integrity or billing changes, obtain the relevant qualified non-author review through the existing PR process under POL-006 §6. Preserve owner review and useful tests. Ordinary test-file changes do not require a named V&V merge approver. Expressly routed safety and money-path changes require their qualified reviewer's approval on the current head (DR-0012 §4.2; REC-116 Decision 6).
 
 The retirement PR set in [#43](https://github.com/eiro-inc/.github/issues/43) aligns POL-006 and the controlled cutover records, removes declaration workflows and their required statuses, and updates local templates and automated PR bodies. Merge the controlled changes first and remove only the retired status requirements alongside each caller migration. Publish the shared short template after consumers are compatible. Retain historical action releases; do not deploy a replacement form checker.
 
 Accessibility review belongs with the actual UI change and relevant testing. The retired accessibility declaration checker checked boxes, not rendered UI. Screen-reader, keyboard, text scaling, contrast, and other applicable checks remain engineering work.
 
-The retirement assessment records removed checks and retained substantive controls. It does not close safety findings or authorize enrollment, PHI use, or billing. The risk register remains release knowledge rather than a universal merge gate.
+The controlled retirement determination is [REC-122 §4.2](https://github.com/eiro-inc/eiro-qms/blob/main/records/REC-122-thorne-dhf-withdrawal-record.md), with the implementation addendum in [REC-116 §10](https://github.com/eiro-inc/eiro-qms/blob/main/records/management-review/REC-116-thorne-commercial-cutover.md). These revisions must be approved and effective through [eiro-qms#760](https://github.com/eiro-inc/eiro-qms/pull/760) before any declaration check is retired. The determination accounts for each removed declaration check and retained substantive control. It does not close safety findings or authorize enrollment, PHI use, or billing. The risk register remains release knowledge rather than a universal merge gate.
 
 ## Keeping the live records honest
 
