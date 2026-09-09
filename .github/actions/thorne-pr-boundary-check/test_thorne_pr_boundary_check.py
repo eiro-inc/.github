@@ -665,27 +665,27 @@ def test_validate_light_non_whitelisted_actor_still_needs_summary():
     assert validate_light("") != []
 
 
-# --- Shipped org PR template parses through the validator ---
-# .github/actions/thorne-pr-boundary-check/<this file> -> .github/pull_request_template.md
-_TEMPLATE_PATH = pathlib.Path(__file__).resolve().parents[2] / "pull_request_template.md"
+# --- Retained template at 4490100c813089577802d967aa91f82b4841bfae ---
+# Historical callers keep the legacy contract; the live short template does not.
+_TEMPLATE_PATH = pathlib.Path(__file__).resolve().parent / "fixtures" / "legacy-pr-template.md"
 
 
-def _org_template():
+def _legacy_template():
     return _TEMPLATE_PATH.read_text(encoding="utf-8")
 
 
-def test_org_template_sections_are_all_discoverable():
+def test_legacy_template_sections_are_all_discoverable():
     # Device sections live inside a <details> block; sections() must still find
-    # every required heading. Guards against a template edit that breaks parsing.
-    errors = validate(_org_template())
+    # every required heading. Retains the historical parser contract.
+    errors = validate(_legacy_template())
     assert not any(e.startswith("Missing required section") for e in errors)
-    assert "## Affected Device Software Items" in _org_template()
+    assert "## Affected Device Software Items" in _legacy_template()
 
 
-def test_filled_org_template_passes_device_validation():
-    # Fill the shipped template as a coherent device PR and confirm validate()
-    # accepts it — so a future structural edit can't silently break the gate.
-    body = _org_template()
+def test_filled_legacy_template_passes_device_validation():
+    # Fill the retained template as a coherent device PR and confirm validate()
+    # accepts it — so retained releases remain testable after template retirement.
+    body = _legacy_template()
     for item in ("Device function", "Class B", *MANDATORY_BOUNDARY_ITEMS):
         body = body.replace(f"- [ ] {item}", f"- [x] {item}")
     body = body.replace("## DHF Trace\n", "## DHF Trace\n\nTraces to DDS §5.\n")
@@ -706,10 +706,10 @@ from thorne_pr_boundary_check import (  # noqa: E402
 )
 
 
-def test_untouched_org_template_fails_dependency_check():
+def test_untouched_legacy_template_fails_dependency_check():
     # Regression: the template's multi-line HTML comment must not count as a
     # substantive declaration (per-line stripping leaked its inner lines).
-    assert validate_new_dependencies(_org_template(), ["package.json"])
+    assert validate_new_dependencies(_legacy_template(), ["package.json"])
 
 
 def test_multiline_comment_alone_is_not_substantive():
