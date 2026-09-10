@@ -6,7 +6,7 @@
 
 **Owner:** Forrest Laine
 
-This is the short operating guide for engineering under Eiro's controlled closeout of the FDA-submission design programme and the Fall 2026 commercial plan. It is not a regulatory classification opinion and does not replace the controlled authority records. If it conflicts with the current approved revisions of REC-116, DR-0012, or DDP, those records control.
+This is the short operating guide for engineering under Eiro's controlled closeout of the FDA-submission design programme and the Fall 2026 commercial plan. It is not a regulatory classification opinion and does not replace the controlled authority records. The effective REC-122 and REC-116 decisions govern transition scope. Before the collection sunset, DDP and DR-0012 retain their stated closeout authority; afterward they are retained evidence of the decision.
 
 ## What changed at cutover
 
@@ -16,17 +16,13 @@ This is the short operating guide for engineering under Eiro's controlled closeo
 - Do not treat P4 as complete, enter P5/P6, or describe the product as FDA approved, cleared, exempt, confirmed, or otherwise accepted by FDA.
 - The bounded final pre-cutover hardening set has merged: `thorne-dhf#271` issued VVP-01 Revision 15, `#273` issued ADR-0018 Revision 1, and `#274` issued CMP Revision 10. Their content is retained history, not authority to start new submission work.
 
-## Work that may continue in the old DHF
+## DHF sunset and transitional references
 
-The DHF remains writable only for the closeout scope in the approved DDP revision:
+The subsequent REC-122 collection-sunset decision replaces ongoing DHF closeout with a historical collection, once its QMS revision, transitional references and final DDP/DR-0012 update are approved and merged. Use `thorne-product/docs/transitional/` for selected HAZ, CRA and RMP analysis. These references may remain transitional: there is no requirement to recreate every old document, complete an adoption map or repair historical citations before engineering continues.
 
-- complete and approve UE-02-E round-two results, de-identified session records, consent-deviation/CAPA reconciliation, required IRB records, and finding dispositions;
-- preserve the exact as-filed A001 package, FDA's Q261559 response, and their provenance;
-- correct or harden an existing record so the point-in-time file is accurate;
-- migrate a still-binding safety, product-boundary, security, architecture, or operating obligation to its live successor; and
-- prepare controlled withdrawal, audit-trail export, archive, restore testing, or documented re-entry.
+Preserve actual product controls and unresolved safety findings, using current requirements, policy and qualified review of affected changes. Old document headers, classifications and process instructions do not independently create current requirements. The DHF is retained history, including the final sunset decision, not an ongoing work queue.
 
-A DHF change outside this list needs a revised DR-0012 before work starts. Suspension does not close F1, F20, a CAPA, an IRB duty, or any safety finding.
+Preserve HFE/IRB evidence, confidentiality, actual reporting and consent/data-disposition duties through existing QMS records. Confirm study closure from the board record. Do not continue submission-directed studies, retrospective tool qualification or simulated process exercises solely to finish the old programme. Archive/export work continues separately and does not delay the operating sunset.
 
 ## Product rules that remain live
 
