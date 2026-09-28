@@ -1,0 +1,2692 @@
+{
+  "captured_at": "2026-09-09T18:00:38.709794+00:00",
+  "repositories": [
+    {
+      "repository": "eiro-inc/thorne-product",
+      "archived": false,
+      "errors": [],
+      "references": [
+        {
+          "path": ".github/workflows/thorne-pr-boundary-check.yml",
+          "matches": [
+            {
+              "line": 12,
+              "text": "thorne-pr-boundary-check:"
+            },
+            {
+              "line": 19,
+              "text": "- uses: eiro-inc/.github/.github/actions/thorne-pr-boundary-check@73ffa92185a510e8fbbcb203468142a68731be3e # lane-aware + CMP \u00a710 New Dependencies gate (.github#15)"
+            }
+          ]
+        }
+      ],
+      "default_branch": "main",
+      "head": "e9ffddb8c16cd794f8794fb979773d1b0d0edcfa",
+      "effective_rules": [],
+      "classic_protection": {
+        "url": "https://api.github.com/repos/eiro-inc/thorne-product/branches/main/protection",
+        "required_status_checks": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-product/branches/main/protection/required_status_checks",
+          "strict": false,
+          "contexts": [
+            "thorne-pr-boundary-check",
+            "gates"
+          ],
+          "contexts_url": "https://api.github.com/repos/eiro-inc/thorne-product/branches/main/protection/required_status_checks/contexts",
+          "checks": [
+            {
+              "context": "thorne-pr-boundary-check",
+              "app_id": 15368
+            },
+            {
+              "context": "gates",
+              "app_id": 15368
+            }
+          ]
+        },
+        "required_pull_request_reviews": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-product/branches/main/protection/required_pull_request_reviews",
+          "dismiss_stale_reviews": false,
+          "require_code_owner_reviews": false,
+          "require_last_push_approval": false,
+          "required_approving_review_count": 1
+        },
+        "required_signatures": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-product/branches/main/protection/required_signatures",
+          "enabled": true
+        },
+        "enforce_admins": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-product/branches/main/protection/enforce_admins",
+          "enabled": false
+        },
+        "required_linear_history": {
+          "enabled": false
+        },
+        "allow_force_pushes": {
+          "enabled": false
+        },
+        "allow_deletions": {
+          "enabled": false
+        },
+        "block_creations": {
+          "enabled": false
+        },
+        "required_conversation_resolution": {
+          "enabled": true
+        },
+        "lock_branch": {
+          "enabled": false
+        },
+        "allow_fork_syncing": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "repository": "eiro-inc/thorne-patient-android",
+      "archived": false,
+      "errors": [],
+      "references": [
+        {
+          "path": ".github/dependabot.yml",
+          "matches": [
+            {
+              "line": 11,
+              "text": "# thorne-a11y-check, thorne-pr-boundary-check, thorne-pr-verification-trace,"
+            }
+          ]
+        },
+        {
+          "path": ".github/thorne-lanes.yml",
+          "matches": [
+            {
+              "line": 5,
+              "text": "#   non_device:  device / non-device axis  -> thorne-pr-boundary-check"
+            }
+          ]
+        },
+        {
+          "path": ".github/workflows/bump-design-tokens.yml",
+          "matches": [
+            {
+              "line": 276,
+              "text": "'## Safety Class',"
+            }
+          ]
+        },
+        {
+          "path": ".github/workflows/thorne-pr-boundary-check.yml",
+          "matches": [
+            {
+              "line": 12,
+              "text": "thorne-pr-boundary-check:"
+            },
+            {
+              "line": 19,
+              "text": "- uses: eiro-inc/.github/.github/actions/thorne-pr-boundary-check@4490100c813089577802d967aa91f82b4841bfae # lane-aware + CMP \u00a710 New Dependencies gate (.github#15)"
+            }
+          ]
+        },
+        {
+          "path": ".github/workflows/traceability.yml",
+          "matches": [
+            {
+              "line": 6,
+              "text": "#   2. Once it runs green, add `thorne-pr-verification-trace` to the repo's"
+            },
+            {
+              "line": 22,
+              "text": "# simply win matches thorne-pr-boundary-check."
+            },
+            {
+              "line": 31,
+              "text": "thorne-pr-verification-trace:"
+            },
+            {
+              "line": 46,
+              "text": "- uses: eiro-inc/.github/.github/actions/thorne-pr-verification-trace@4490100c813089577802d967aa91f82b4841bfae # v0.2.1 engine"
+            }
+          ]
+        }
+      ],
+      "default_branch": "main",
+      "head": "6abbe278a1bdbd8732f05483d4edbc914a68ee6b",
+      "effective_rules": [],
+      "classic_protection": {
+        "url": "https://api.github.com/repos/eiro-inc/thorne-patient-android/branches/main/protection",
+        "required_status_checks": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-patient-android/branches/main/protection/required_status_checks",
+          "strict": false,
+          "contexts": [
+            "thorne-pr-boundary-check",
+            "Audit",
+            "Test",
+            "Build",
+            "Lint",
+            "GitGuardian Security Checks",
+            "dependency-review / Dependency review",
+            "owner-review"
+          ],
+          "contexts_url": "https://api.github.com/repos/eiro-inc/thorne-patient-android/branches/main/protection/required_status_checks/contexts",
+          "checks": [
+            {
+              "context": "thorne-pr-boundary-check",
+              "app_id": 15368
+            },
+            {
+              "context": "Audit",
+              "app_id": 15368
+            },
+            {
+              "context": "Test",
+              "app_id": 15368
+            },
+            {
+              "context": "Build",
+              "app_id": 15368
+            },
+            {
+              "context": "Lint",
+              "app_id": 15368
+            },
+            {
+              "context": "GitGuardian Security Checks",
+              "app_id": 46505
+            },
+            {
+              "context": "dependency-review / Dependency review",
+              "app_id": 15368
+            },
+            {
+              "context": "owner-review",
+              "app_id": 4250994
+            }
+          ]
+        },
+        "required_pull_request_reviews": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-patient-android/branches/main/protection/required_pull_request_reviews",
+          "dismiss_stale_reviews": true,
+          "require_code_owner_reviews": true,
+          "require_last_push_approval": true,
+          "required_approving_review_count": 1
+        },
+        "required_signatures": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-patient-android/branches/main/protection/required_signatures",
+          "enabled": true
+        },
+        "enforce_admins": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-patient-android/branches/main/protection/enforce_admins",
+          "enabled": true
+        },
+        "required_linear_history": {
+          "enabled": false
+        },
+        "allow_force_pushes": {
+          "enabled": false
+        },
+        "allow_deletions": {
+          "enabled": false
+        },
+        "block_creations": {
+          "enabled": false
+        },
+        "required_conversation_resolution": {
+          "enabled": true
+        },
+        "lock_branch": {
+          "enabled": false
+        },
+        "allow_fork_syncing": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "repository": "eiro-inc/thorne-core",
+      "archived": false,
+      "errors": [],
+      "references": [
+        {
+          "path": ".github/workflows/thorne-pr-boundary-check.yml",
+          "matches": [
+            {
+              "line": 12,
+              "text": "thorne-pr-boundary-check:"
+            },
+            {
+              "line": 19,
+              "text": "- uses: eiro-inc/.github/.github/actions/thorne-pr-boundary-check@4490100c813089577802d967aa91f82b4841bfae # lane-aware + CMP \u00a710 New Dependencies gate (.github#15)"
+            }
+          ]
+        },
+        {
+          "path": ".github/workflows/traceability.yml",
+          "matches": [
+            {
+              "line": 6,
+              "text": "#   2. Once it runs green, add `thorne-pr-verification-trace` to the repo's"
+            },
+            {
+              "line": 22,
+              "text": "# simply win matches thorne-pr-boundary-check."
+            },
+            {
+              "line": 31,
+              "text": "thorne-pr-verification-trace:"
+            },
+            {
+              "line": 46,
+              "text": "- uses: eiro-inc/.github/.github/actions/thorne-pr-verification-trace@4490100c813089577802d967aa91f82b4841bfae # v0.2.1 engine"
+            }
+          ]
+        }
+      ],
+      "default_branch": "main",
+      "head": "8beac119cad5ff64da325d99b8c7ed13e1dfed53",
+      "effective_rules": [],
+      "classic_protection": {
+        "url": "https://api.github.com/repos/eiro-inc/thorne-core/branches/main/protection",
+        "required_status_checks": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-core/branches/main/protection/required_status_checks",
+          "strict": false,
+          "contexts": [
+            "thorne-pr-boundary-check",
+            "GitGuardian Security Checks",
+            "PR check complete",
+            "dependency-review / Dependency review",
+            "owner-review"
+          ],
+          "contexts_url": "https://api.github.com/repos/eiro-inc/thorne-core/branches/main/protection/required_status_checks/contexts",
+          "checks": [
+            {
+              "context": "thorne-pr-boundary-check",
+              "app_id": 15368
+            },
+            {
+              "context": "GitGuardian Security Checks",
+              "app_id": 46505
+            },
+            {
+              "context": "PR check complete",
+              "app_id": 15368
+            },
+            {
+              "context": "dependency-review / Dependency review",
+              "app_id": 15368
+            },
+            {
+              "context": "owner-review",
+              "app_id": 4250994
+            }
+          ]
+        },
+        "required_pull_request_reviews": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-core/branches/main/protection/required_pull_request_reviews",
+          "dismiss_stale_reviews": true,
+          "require_code_owner_reviews": true,
+          "require_last_push_approval": true,
+          "required_approving_review_count": 1
+        },
+        "required_signatures": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-core/branches/main/protection/required_signatures",
+          "enabled": true
+        },
+        "enforce_admins": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-core/branches/main/protection/enforce_admins",
+          "enabled": true
+        },
+        "required_linear_history": {
+          "enabled": false
+        },
+        "allow_force_pushes": {
+          "enabled": false
+        },
+        "allow_deletions": {
+          "enabled": false
+        },
+        "block_creations": {
+          "enabled": false
+        },
+        "required_conversation_resolution": {
+          "enabled": true
+        },
+        "lock_branch": {
+          "enabled": false
+        },
+        "allow_fork_syncing": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "repository": "eiro-inc/thorne-dhf",
+      "archived": false,
+      "errors": [],
+      "references": [
+        {
+          "path": ".github/dependabot.yml",
+          "matches": [
+            {
+              "line": 10,
+              "text": "# just thorne-pr-boundary-check; the group grows as more land. External"
+            }
+          ]
+        },
+        {
+          "path": ".github/workflows/thorne-pr-boundary-check.yml",
+          "matches": [
+            {
+              "line": 12,
+              "text": "thorne-pr-boundary-check:"
+            },
+            {
+              "line": 19,
+              "text": "- uses: eiro-inc/.github/.github/actions/thorne-pr-boundary-check@fe4261b0af49a45da3b8cf37b3dd3bf9b124864c # v1.0.0"
+            }
+          ]
+        }
+      ],
+      "default_branch": "main",
+      "head": "58c742bf9aa0b295251ecd614f7a8de6ea51bff3",
+      "effective_rules": [
+        {
+          "type": "deletion",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/thorne-dhf",
+          "ruleset_id": 16365542
+        },
+        {
+          "type": "non_fast_forward",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/thorne-dhf",
+          "ruleset_id": 16365542
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 1,
+            "dismiss_stale_reviews_on_push": false,
+            "required_reviewers": [],
+            "require_code_owner_review": false,
+            "dismissal_restriction": {
+              "enabled": false,
+              "allowed_actors": []
+            },
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": false,
+            "require_extra_approval_for_unattributed_changes": true,
+            "allowed_merge_methods": [
+              "merge",
+              "squash",
+              "rebase"
+            ]
+          },
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/thorne-dhf",
+          "ruleset_id": 16365542
+        },
+        {
+          "type": "required_status_checks",
+          "parameters": {
+            "strict_required_status_checks_policy": false,
+            "do_not_enforce_on_create": false,
+            "required_status_checks": [
+              {
+                "context": "stamp / stamp",
+                "integration_id": 15368
+              },
+              {
+                "context": "thorne-pr-boundary-check",
+                "integration_id": 15368
+              }
+            ]
+          },
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/thorne-dhf",
+          "ruleset_id": 16365542
+        }
+      ],
+      "classic_protection": {
+        "url": "https://api.github.com/repos/eiro-inc/thorne-dhf/branches/main/protection",
+        "required_pull_request_reviews": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-dhf/branches/main/protection/required_pull_request_reviews",
+          "dismiss_stale_reviews": false,
+          "require_code_owner_reviews": false,
+          "require_last_push_approval": false,
+          "required_approving_review_count": 1,
+          "bypass_pull_request_allowances": {
+            "users": [],
+            "teams": [],
+            "apps": [
+              {
+                "id": 4408284,
+                "client_id": "Iv23liinuaooYi6AKfoT",
+                "slug": "thorne-dhf-doc-index",
+                "node_id": "A_kwHODmf6Nc4AQ0Pc",
+                "owner": {
+                  "login": "eiro-inc",
+                  "id": 241695285,
+                  "node_id": "O_kgDODmf6NQ",
+                  "avatar_url": "https://avatars.githubusercontent.com/u/241695285?v=4",
+                  "gravatar_id": "",
+                  "url": "https://api.github.com/users/eiro-inc",
+                  "html_url": "https://github.com/eiro-inc",
+                  "followers_url": "https://api.github.com/users/eiro-inc/followers",
+                  "following_url": "https://api.github.com/users/eiro-inc/following{/other_user}",
+                  "gists_url": "https://api.github.com/users/eiro-inc/gists{/gist_id}",
+                  "starred_url": "https://api.github.com/users/eiro-inc/starred{/owner}{/repo}",
+                  "subscriptions_url": "https://api.github.com/users/eiro-inc/subscriptions",
+                  "organizations_url": "https://api.github.com/users/eiro-inc/orgs",
+                  "repos_url": "https://api.github.com/users/eiro-inc/repos",
+                  "events_url": "https://api.github.com/users/eiro-inc/events{/privacy}",
+                  "received_events_url": "https://api.github.com/users/eiro-inc/received_events",
+                  "type": "Organization",
+                  "user_view_type": "public",
+                  "site_admin": false
+                },
+                "name": "thorne-dhf-doc-index",
+                "description": "",
+                "external_url": "https://github.com/eiro-inc/thorne-dhf",
+                "html_url": "https://github.com/apps/thorne-dhf-doc-index",
+                "created_at": "2026-07-27T17:33:48Z",
+                "updated_at": "2026-07-27T17:34:49Z",
+                "permissions": {
+                  "contents": "write",
+                  "metadata": "read"
+                },
+                "events": []
+              }
+            ]
+          }
+        },
+        "required_signatures": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-dhf/branches/main/protection/required_signatures",
+          "enabled": true
+        },
+        "enforce_admins": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-dhf/branches/main/protection/enforce_admins",
+          "enabled": true
+        },
+        "required_linear_history": {
+          "enabled": false
+        },
+        "allow_force_pushes": {
+          "enabled": false
+        },
+        "allow_deletions": {
+          "enabled": false
+        },
+        "block_creations": {
+          "enabled": false
+        },
+        "required_conversation_resolution": {
+          "enabled": true
+        },
+        "lock_branch": {
+          "enabled": false
+        },
+        "allow_fork_syncing": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "repository": "eiro-inc/document-review",
+      "archived": false,
+      "errors": [
+        "classic_protection: gh: Branch not protected (HTTP 404)"
+      ],
+      "references": [],
+      "default_branch": "main",
+      "head": "c234badcf332df340a965c31e36c2e23c35bd1fb",
+      "effective_rules": [],
+      "classic_protection": {
+        "unavailable": "gh: Branch not protected (HTTP 404)"
+      }
+    },
+    {
+      "repository": "eiro-inc/eiro-qms",
+      "archived": false,
+      "errors": [],
+      "references": [],
+      "default_branch": "main",
+      "head": "46a1a364b6a4240d1c7c7b23a80c70a451d4c9f1",
+      "effective_rules": [
+        {
+          "type": "deletion",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/eiro-qms",
+          "ruleset_id": 16459923
+        },
+        {
+          "type": "non_fast_forward",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/eiro-qms",
+          "ruleset_id": 16459923
+        },
+        {
+          "type": "required_linear_history",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/eiro-qms",
+          "ruleset_id": 16459923
+        },
+        {
+          "type": "required_status_checks",
+          "parameters": {
+            "strict_required_status_checks_policy": false,
+            "do_not_enforce_on_create": false,
+            "required_status_checks": [
+              {
+                "context": "gate",
+                "integration_id": 15368
+              },
+              {
+                "context": "stamp",
+                "integration_id": 15368
+              },
+              {
+                "context": "retraining-decision",
+                "integration_id": 15368
+              }
+            ]
+          },
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/eiro-qms",
+          "ruleset_id": 16459923
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 1,
+            "dismiss_stale_reviews_on_push": false,
+            "required_reviewers": [],
+            "require_code_owner_review": false,
+            "dismissal_restriction": {
+              "enabled": false,
+              "allowed_actors": []
+            },
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": true,
+            "require_extra_approval_for_unattributed_changes": true,
+            "allowed_merge_methods": [
+              "squash"
+            ]
+          },
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/eiro-qms",
+          "ruleset_id": 16459923
+        },
+        {
+          "type": "required_signatures",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/eiro-qms",
+          "ruleset_id": 16459923
+        }
+      ],
+      "classic_protection": {
+        "url": "https://api.github.com/repos/eiro-inc/eiro-qms/branches/main/protection",
+        "required_pull_request_reviews": {
+          "url": "https://api.github.com/repos/eiro-inc/eiro-qms/branches/main/protection/required_pull_request_reviews",
+          "dismiss_stale_reviews": false,
+          "require_code_owner_reviews": false,
+          "require_last_push_approval": false,
+          "required_approving_review_count": 1,
+          "bypass_pull_request_allowances": {
+            "users": [],
+            "teams": [],
+            "apps": [
+              {
+                "id": 4038658,
+                "client_id": "Iv23ligG27xW9HnS0EtZ",
+                "slug": "eiro-qms-doc-index",
+                "node_id": "A_kwHODmf6Nc4APaAC",
+                "owner": {
+                  "login": "eiro-inc",
+                  "id": 241695285,
+                  "node_id": "O_kgDODmf6NQ",
+                  "avatar_url": "https://avatars.githubusercontent.com/u/241695285?v=4",
+                  "gravatar_id": "",
+                  "url": "https://api.github.com/users/eiro-inc",
+                  "html_url": "https://github.com/eiro-inc",
+                  "followers_url": "https://api.github.com/users/eiro-inc/followers",
+                  "following_url": "https://api.github.com/users/eiro-inc/following{/other_user}",
+                  "gists_url": "https://api.github.com/users/eiro-inc/gists{/gist_id}",
+                  "starred_url": "https://api.github.com/users/eiro-inc/starred{/owner}{/repo}",
+                  "subscriptions_url": "https://api.github.com/users/eiro-inc/subscriptions",
+                  "organizations_url": "https://api.github.com/users/eiro-inc/orgs",
+                  "repos_url": "https://api.github.com/users/eiro-inc/repos",
+                  "events_url": "https://api.github.com/users/eiro-inc/events{/privacy}",
+                  "received_events_url": "https://api.github.com/users/eiro-inc/received_events",
+                  "type": "Organization",
+                  "user_view_type": "public",
+                  "site_admin": false
+                },
+                "name": "eiro-qms-doc-index",
+                "description": "",
+                "external_url": "https://github.com/eiro-inc/eiro-qms",
+                "html_url": "https://github.com/apps/eiro-qms-doc-index",
+                "created_at": "2026-06-12T16:36:21Z",
+                "updated_at": "2026-06-12T16:36:42Z",
+                "permissions": {
+                  "contents": "write",
+                  "metadata": "read"
+                },
+                "events": []
+              },
+              {
+                "id": 4089326,
+                "client_id": "Iv23liadMZzFSW1foBrf",
+                "slug": "eiro-qms-training-status",
+                "node_id": "A_kwHODmf6Nc4APmXu",
+                "owner": {
+                  "login": "eiro-inc",
+                  "id": 241695285,
+                  "node_id": "O_kgDODmf6NQ",
+                  "avatar_url": "https://avatars.githubusercontent.com/u/241695285?v=4",
+                  "gravatar_id": "",
+                  "url": "https://api.github.com/users/eiro-inc",
+                  "html_url": "https://github.com/eiro-inc",
+                  "followers_url": "https://api.github.com/users/eiro-inc/followers",
+                  "following_url": "https://api.github.com/users/eiro-inc/following{/other_user}",
+                  "gists_url": "https://api.github.com/users/eiro-inc/gists{/gist_id}",
+                  "starred_url": "https://api.github.com/users/eiro-inc/starred{/owner}{/repo}",
+                  "subscriptions_url": "https://api.github.com/users/eiro-inc/subscriptions",
+                  "organizations_url": "https://api.github.com/users/eiro-inc/orgs",
+                  "repos_url": "https://api.github.com/users/eiro-inc/repos",
+                  "events_url": "https://api.github.com/users/eiro-inc/events{/privacy}",
+                  "received_events_url": "https://api.github.com/users/eiro-inc/received_events",
+                  "type": "Organization",
+                  "user_view_type": "public",
+                  "site_admin": false
+                },
+                "name": "eiro-qms-training-status",
+                "description": "",
+                "external_url": "https://github.com/eiro-inc/eiro-qms",
+                "html_url": "https://github.com/apps/eiro-qms-training-status",
+                "created_at": "2026-06-18T20:19:59Z",
+                "updated_at": "2026-06-18T20:20:07Z",
+                "permissions": {
+                  "contents": "write",
+                  "metadata": "read"
+                },
+                "events": []
+              }
+            ]
+          }
+        },
+        "required_signatures": {
+          "url": "https://api.github.com/repos/eiro-inc/eiro-qms/branches/main/protection/required_signatures",
+          "enabled": true
+        },
+        "enforce_admins": {
+          "url": "https://api.github.com/repos/eiro-inc/eiro-qms/branches/main/protection/enforce_admins",
+          "enabled": true
+        },
+        "required_linear_history": {
+          "enabled": false
+        },
+        "allow_force_pushes": {
+          "enabled": false
+        },
+        "allow_deletions": {
+          "enabled": false
+        },
+        "block_creations": {
+          "enabled": false
+        },
+        "required_conversation_resolution": {
+          "enabled": true
+        },
+        "lock_branch": {
+          "enabled": false
+        },
+        "allow_fork_syncing": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "repository": "eiro-inc/thorne-web",
+      "archived": false,
+      "errors": [],
+      "references": [
+        {
+          "path": ".github/workflows/bump-design-tokens.yml",
+          "matches": [
+            {
+              "line": 262,
+              "text": "'## Safety Class',"
+            }
+          ]
+        },
+        {
+          "path": ".github/workflows/thorne-pr-boundary-check.yml",
+          "matches": [
+            {
+              "line": 12,
+              "text": "thorne-pr-boundary-check:"
+            },
+            {
+              "line": 19,
+              "text": "- uses: eiro-inc/.github/.github/actions/thorne-pr-boundary-check@main"
+            }
+          ]
+        },
+        {
+          "path": ".github/workflows/traceability.yml",
+          "matches": [
+            {
+              "line": 6,
+              "text": "#   2. Once it runs green, add `thorne-pr-verification-trace` to the repo's"
+            },
+            {
+              "line": 22,
+              "text": "# simply win matches thorne-pr-boundary-check."
+            },
+            {
+              "line": 31,
+              "text": "thorne-pr-verification-trace:"
+            },
+            {
+              "line": 44,
+              "text": "- uses: eiro-inc/.github/.github/actions/thorne-pr-verification-trace@main"
+            }
+          ]
+        }
+      ],
+      "default_branch": "main",
+      "head": "194126c931ce6fe42dfd81e48d769a565861ba8a",
+      "effective_rules": [],
+      "classic_protection": {
+        "url": "https://api.github.com/repos/eiro-inc/thorne-web/branches/main/protection",
+        "required_status_checks": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-web/branches/main/protection/required_status_checks",
+          "strict": false,
+          "contexts": [
+            "Dependency scan / Dependency review",
+            "thorne-pr-boundary-check",
+            "GitGuardian Security Checks",
+            "owner-review",
+            "Build & type-check",
+            "Lint",
+            "Unit / component tests"
+          ],
+          "contexts_url": "https://api.github.com/repos/eiro-inc/thorne-web/branches/main/protection/required_status_checks/contexts",
+          "checks": [
+            {
+              "context": "Dependency scan / Dependency review",
+              "app_id": 15368
+            },
+            {
+              "context": "thorne-pr-boundary-check",
+              "app_id": 15368
+            },
+            {
+              "context": "GitGuardian Security Checks",
+              "app_id": 46505
+            },
+            {
+              "context": "owner-review",
+              "app_id": 4250994
+            },
+            {
+              "context": "Build & type-check",
+              "app_id": 15368
+            },
+            {
+              "context": "Lint",
+              "app_id": 15368
+            },
+            {
+              "context": "Unit / component tests",
+              "app_id": 15368
+            }
+          ]
+        },
+        "required_pull_request_reviews": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-web/branches/main/protection/required_pull_request_reviews",
+          "dismiss_stale_reviews": true,
+          "require_code_owner_reviews": true,
+          "require_last_push_approval": true,
+          "required_approving_review_count": 1
+        },
+        "required_signatures": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-web/branches/main/protection/required_signatures",
+          "enabled": true
+        },
+        "enforce_admins": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-web/branches/main/protection/enforce_admins",
+          "enabled": true
+        },
+        "required_linear_history": {
+          "enabled": false
+        },
+        "allow_force_pushes": {
+          "enabled": false
+        },
+        "allow_deletions": {
+          "enabled": false
+        },
+        "block_creations": {
+          "enabled": false
+        },
+        "required_conversation_resolution": {
+          "enabled": true
+        },
+        "lock_branch": {
+          "enabled": false
+        },
+        "allow_fork_syncing": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "repository": "eiro-inc/npm-packages",
+      "archived": false,
+      "errors": [],
+      "references": [],
+      "default_branch": "main",
+      "head": "e35288f837f36d694409ad39fd96a5619a3a1b04",
+      "effective_rules": [],
+      "classic_protection": {
+        "url": "https://api.github.com/repos/eiro-inc/npm-packages/branches/main/protection",
+        "required_status_checks": {
+          "url": "https://api.github.com/repos/eiro-inc/npm-packages/branches/main/protection/required_status_checks",
+          "strict": false,
+          "contexts": [
+            "owner-review",
+            "dependency-review / Dependency review"
+          ],
+          "contexts_url": "https://api.github.com/repos/eiro-inc/npm-packages/branches/main/protection/required_status_checks/contexts",
+          "checks": [
+            {
+              "context": "owner-review",
+              "app_id": 4250994
+            },
+            {
+              "context": "dependency-review / Dependency review",
+              "app_id": 15368
+            }
+          ]
+        },
+        "required_pull_request_reviews": {
+          "url": "https://api.github.com/repos/eiro-inc/npm-packages/branches/main/protection/required_pull_request_reviews",
+          "dismiss_stale_reviews": true,
+          "require_code_owner_reviews": true,
+          "require_last_push_approval": true,
+          "required_approving_review_count": 1
+        },
+        "required_signatures": {
+          "url": "https://api.github.com/repos/eiro-inc/npm-packages/branches/main/protection/required_signatures",
+          "enabled": true
+        },
+        "enforce_admins": {
+          "url": "https://api.github.com/repos/eiro-inc/npm-packages/branches/main/protection/enforce_admins",
+          "enabled": true
+        },
+        "required_linear_history": {
+          "enabled": false
+        },
+        "allow_force_pushes": {
+          "enabled": false
+        },
+        "allow_deletions": {
+          "enabled": false
+        },
+        "block_creations": {
+          "enabled": false
+        },
+        "required_conversation_resolution": {
+          "enabled": true
+        },
+        "lock_branch": {
+          "enabled": false
+        },
+        "allow_fork_syncing": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "repository": "eiro-inc/thorne-backend",
+      "archived": false,
+      "errors": [],
+      "references": [
+        {
+          "path": ".github/AGENTS.md",
+          "matches": [
+            {
+              "line": 20,
+              "text": "`owner-review`, `thorne-pr-boundary-check`, `regression`, `pr-checks-complete`,"
+            },
+            {
+              "line": 64,
+              "text": "`thorne-pr-boundary-check` \u2014 the sole workflow that had it \u2014 so the other gates"
+            },
+            {
+              "line": 67,
+              "text": "`regression`, `thorne-pr-boundary-check` and `dependency-review`. The two that do"
+            },
+            {
+              "line": 82,
+              "text": "runners (`pr-checks-complete`, `regression`, `thorne-pr-boundary-check`) for a few"
+            },
+            {
+              "line": 195,
+              "text": "a defect-C site. That is why `thorne-pr-boundary-check.yml` uses"
+            }
+          ]
+        },
+        {
+          "path": ".github/thorne-lanes.yml",
+          "matches": [
+            {
+              "line": 7,
+              "text": "# .github/actions/thorne-pr-boundary-check (** = any depth, * = one segment)."
+            }
+          ]
+        },
+        {
+          "path": ".github/workflows/dependabot-thorne-boundary.yml",
+          "matches": [
+            {
+              "line": 4,
+              "text": "# boundary sections and `thorne-pr-boundary-check` \u2014 a required check \u2014 fails"
+            }
+          ]
+        },
+        {
+          "path": ".github/workflows/pr-checks.yml",
+          "matches": [
+            {
+              "line": 33,
+              "text": "# `thorne-pr-boundary-check`, the one workflow that had it, so both gates"
+            },
+            {
+              "line": 44,
+              "text": "# `thorne-pr-boundary-check` \u2014 for a few seconds each, on a 20-runner org-wide"
+            }
+          ]
+        },
+        {
+          "path": ".github/workflows/sandbox-pr.yml",
+          "matches": [
+            {
+              "line": 64,
+              "text": "# CREATES a defect-C site, which is why thorne-pr-boundary-check.yml uses `false`."
+            }
+          ]
+        },
+        {
+          "path": ".github/workflows/thorne-pr-boundary-check.yml",
+          "matches": [
+            {
+              "line": 5,
+              "text": "# No `paths:` and no `branches:` filter \u2014 `thorne-pr-boundary-check` is a"
+            },
+            {
+              "line": 41,
+              "text": "thorne-pr-boundary-check:"
+            },
+            {
+              "line": 65,
+              "text": "- uses: eiro-inc/.github/.github/actions/thorne-pr-boundary-check@bc1958308f14617f84215bc8ee258c771bad0ae3 # lane-aware checker (v1.1.0 tag pending)"
+            }
+          ]
+        },
+        {
+          "path": ".github/workflows/traceability.yml",
+          "matches": [
+            {
+              "line": 6,
+              "text": "#   2. Once it runs green, add `thorne-pr-verification-trace` to the repo's"
+            },
+            {
+              "line": 22,
+              "text": "# simply win matches thorne-pr-boundary-check."
+            },
+            {
+              "line": 31,
+              "text": "thorne-pr-verification-trace:"
+            },
+            {
+              "line": 46,
+              "text": "- uses: eiro-inc/.github/.github/actions/thorne-pr-verification-trace@bc1958308f14617f84215bc8ee258c771bad0ae3 # v0.2.1 engine"
+            }
+          ]
+        }
+      ],
+      "default_branch": "main",
+      "head": "eb12898920879b92b0a99da09bcd3915d99be6fc",
+      "effective_rules": [],
+      "classic_protection": {
+        "url": "https://api.github.com/repos/eiro-inc/thorne-backend/branches/main/protection",
+        "required_status_checks": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-backend/branches/main/protection/required_status_checks",
+          "strict": false,
+          "contexts": [
+            "thorne-pr-boundary-check",
+            "regression",
+            "GitGuardian Security Checks",
+            "pr-checks-complete",
+            "dependency-review / Dependency review",
+            "owner-review"
+          ],
+          "contexts_url": "https://api.github.com/repos/eiro-inc/thorne-backend/branches/main/protection/required_status_checks/contexts",
+          "checks": [
+            {
+              "context": "thorne-pr-boundary-check",
+              "app_id": 15368
+            },
+            {
+              "context": "regression",
+              "app_id": 15368
+            },
+            {
+              "context": "GitGuardian Security Checks",
+              "app_id": 46505
+            },
+            {
+              "context": "pr-checks-complete",
+              "app_id": 15368
+            },
+            {
+              "context": "dependency-review / Dependency review",
+              "app_id": 15368
+            },
+            {
+              "context": "owner-review",
+              "app_id": 4250994
+            }
+          ]
+        },
+        "required_pull_request_reviews": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-backend/branches/main/protection/required_pull_request_reviews",
+          "dismiss_stale_reviews": true,
+          "require_code_owner_reviews": true,
+          "require_last_push_approval": true,
+          "required_approving_review_count": 1
+        },
+        "required_signatures": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-backend/branches/main/protection/required_signatures",
+          "enabled": true
+        },
+        "enforce_admins": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-backend/branches/main/protection/enforce_admins",
+          "enabled": true
+        },
+        "required_linear_history": {
+          "enabled": false
+        },
+        "allow_force_pushes": {
+          "enabled": false
+        },
+        "allow_deletions": {
+          "enabled": false
+        },
+        "block_creations": {
+          "enabled": false
+        },
+        "required_conversation_resolution": {
+          "enabled": true
+        },
+        "lock_branch": {
+          "enabled": false
+        },
+        "allow_fork_syncing": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "repository": "eiro-inc/thorne-patient-ios",
+      "archived": false,
+      "errors": [],
+      "references": [
+        {
+          "path": ".github/thorne-lanes.yml",
+          "matches": [
+            {
+              "line": 5,
+              "text": "#   non_device:  device / non-device axis  -> thorne-pr-boundary-check"
+            }
+          ]
+        },
+        {
+          "path": ".github/workflows/bump-design-tokens.yml",
+          "matches": [
+            {
+              "line": 254,
+              "text": "'## DHF Trace',"
+            },
+            {
+              "line": 262,
+              "text": "'## Safety Class',"
+            }
+          ]
+        },
+        {
+          "path": ".github/workflows/pr_check.yml",
+          "matches": [
+            {
+              "line": 7,
+              "text": "# change branch protection. Today only thorne-pr-boundary-check is enforced."
+            }
+          ]
+        },
+        {
+          "path": ".github/workflows/thorne-pr-boundary-check.yml",
+          "matches": [
+            {
+              "line": 12,
+              "text": "thorne-pr-boundary-check:"
+            },
+            {
+              "line": 19,
+              "text": "- uses: eiro-inc/.github/.github/actions/thorne-pr-boundary-check@4490100c813089577802d967aa91f82b4841bfae # lane-aware + CMP \u00a710 New Dependencies gate (.github#15)"
+            }
+          ]
+        },
+        {
+          "path": ".github/workflows/traceability.yml",
+          "matches": [
+            {
+              "line": 6,
+              "text": "#   2. Once it runs green, add `thorne-pr-verification-trace` to the repo's"
+            },
+            {
+              "line": 22,
+              "text": "# simply win matches thorne-pr-boundary-check."
+            },
+            {
+              "line": 31,
+              "text": "thorne-pr-verification-trace:"
+            },
+            {
+              "line": 46,
+              "text": "- uses: eiro-inc/.github/.github/actions/thorne-pr-verification-trace@4490100c813089577802d967aa91f82b4841bfae # v0.2.1 engine"
+            }
+          ]
+        }
+      ],
+      "default_branch": "main",
+      "head": "cccb5d20aa2d6daa847d6f95f9df1da4ec3ca406",
+      "effective_rules": [],
+      "classic_protection": {
+        "url": "https://api.github.com/repos/eiro-inc/thorne-patient-ios/branches/main/protection",
+        "required_status_checks": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-patient-ios/branches/main/protection/required_status_checks",
+          "strict": false,
+          "contexts": [
+            "thorne-pr-boundary-check",
+            "GitGuardian Security Checks",
+            "PR Check Complete",
+            "owner-review"
+          ],
+          "contexts_url": "https://api.github.com/repos/eiro-inc/thorne-patient-ios/branches/main/protection/required_status_checks/contexts",
+          "checks": [
+            {
+              "context": "thorne-pr-boundary-check",
+              "app_id": 15368
+            },
+            {
+              "context": "GitGuardian Security Checks",
+              "app_id": 46505
+            },
+            {
+              "context": "PR Check Complete",
+              "app_id": 15368
+            },
+            {
+              "context": "owner-review",
+              "app_id": 4250994
+            }
+          ]
+        },
+        "required_pull_request_reviews": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-patient-ios/branches/main/protection/required_pull_request_reviews",
+          "dismiss_stale_reviews": true,
+          "require_code_owner_reviews": true,
+          "require_last_push_approval": true,
+          "required_approving_review_count": 1
+        },
+        "required_signatures": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-patient-ios/branches/main/protection/required_signatures",
+          "enabled": true
+        },
+        "enforce_admins": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-patient-ios/branches/main/protection/enforce_admins",
+          "enabled": true
+        },
+        "required_linear_history": {
+          "enabled": false
+        },
+        "allow_force_pushes": {
+          "enabled": false
+        },
+        "allow_deletions": {
+          "enabled": false
+        },
+        "block_creations": {
+          "enabled": false
+        },
+        "required_conversation_resolution": {
+          "enabled": true
+        },
+        "lock_branch": {
+          "enabled": false
+        },
+        "allow_fork_syncing": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "repository": "eiro-inc/.github",
+      "archived": false,
+      "errors": [
+        "classic_protection: gh: Branch not protected (HTTP 404)"
+      ],
+      "references": [
+        {
+          "path": ".github/pull_request_template.md",
+          "matches": [
+            {
+              "line": 13,
+              "text": "The `thorne-pr-boundary-check` decides the lane automatically from the files"
+            },
+            {
+              "line": 36,
+              "text": "\u00a7\u00a74.1/6/9, and use Safety Class N/A when no ARC item is affected. -->"
+            },
+            {
+              "line": 45,
+              "text": "## DHF Trace"
+            },
+            {
+              "line": 61,
+              "text": "## Safety Class"
+            }
+          ]
+        },
+        {
+          "path": ".github/workflows/test-thorne-boundary-check.yml",
+          "matches": [
+            {
+              "line": 6,
+              "text": "- \".github/actions/thorne-pr-boundary-check/**\""
+            },
+            {
+              "line": 13,
+              "text": "- \".github/actions/thorne-pr-boundary-check/**\""
+            },
+            {
+              "line": 24,
+              "text": "- thorne-pr-boundary-check"
+            }
+          ]
+        },
+        {
+          "path": "README.md",
+          "matches": [
+            {
+              "line": 28,
+              "text": "CMP \u00a7\u00a74.1, 6, and 9, identifies any affected ARC item, and selects Safety Class"
+            },
+            {
+              "line": 35,
+              "text": "`.github/actions/thorne-pr-boundary-check` validates that a pull request using the organization template has completed the Thorne-specific sections required for its lane. Its validator (`thorne_pr_boundary_check.py`) is an importable module with unit tests (run by `test-thorne-boundary-check.yml`). The action reads the PR's changed files and the base branch's `.github/thorne-lanes.yml`: paths are device by default, and listed `non_device` globs opt paths into the light non-device lane. Repository-specific static import-boundary checks remain local to each source-code repository."
+            },
+            {
+              "line": 51,
+              "text": "thorne-pr-boundary-check:"
+            },
+            {
+              "line": 54,
+              "text": "- uses: eiro-inc/.github/.github/actions/thorne-pr-boundary-check@main"
+            },
+            {
+              "line": 57,
+              "text": "After adding the workflow, configure the repository's branch protection or organization ruleset to require the `thorne-pr-boundary-check` status check before merge."
+            },
+            {
+              "line": 59,
+              "text": "**DHF Trace: anchor existence (opt-in).** By default the DHF Trace section is tested for anchor *shape*, which accepts a well-formed but nonexistent id such as `SRS-77-77`. Pass a `dhf-token` to check cited ids against the controlled DHF instead (thorne-dhf#113 AC2):"
+            },
+            {
+              "line": 62,
+              "text": "- uses: eiro-inc/.github/.github/actions/thorne-pr-boundary-check@main"
+            },
+            {
+              "line": 71,
+              "text": "Checkable and citable are separate things. `ARC-NN` handles are checkable, but SDD \u00a73 records that they are not controlled document identifiers and \"shall not be cited as design-input or design-output IDs\" \u2014 so an ARC citation does **not** satisfy the DHF Trace requirement on its own, whether or not the id exists. It is still validated when it appears alongside a legitimate anchor, so a bogus `ARC-99` is not ignored."
+            },
+            {
+              "line": 88,
+              "text": "- DHF Trace text is non-placeholder when the PR touches device function, Multiple-Function impact assessment, pre-design scaffolding, or DHF/QMS artifacts."
+            },
+            {
+              "line": 90,
+              "text": "Safety Class and identify every affected device software item as"
+            },
+            {
+              "line": 94,
+              "text": "Items` when that heading is present, and from the DHF Trace only when it is"
+            },
+            {
+              "line": 97,
+              "text": "- On any Thorne-scoped PR: `C-adjacent` is rejected as a class, Safety Class"
+            },
+            {
+              "line": 104,
+              "text": "`.github/actions/thorne-pr-verification-trace` runs the read-only `vvtrace`"
+            },
+            {
+              "line": 128,
+              "text": "thorne-pr-verification-trace:"
+            },
+            {
+              "line": 134,
+              "text": "- uses: eiro-inc/.github/.github/actions/thorne-pr-verification-trace@main"
+            },
+            {
+              "line": 144,
+              "text": "`thorne-pr-verification-trace` status check before merge. See the action's"
+            },
+            {
+              "line": 145,
+              "text": "[README](.github/actions/thorne-pr-verification-trace/README.md) for inputs."
+            }
+          ]
+        },
+        {
+          "path": "THORNE_ENGINEERING_CUTOVER.md",
+          "matches": [
+            {
+              "line": 57,
+              "text": "The existing organization template and pinned boundary action still mechanically require four device-era fields in some repositories: **DHF Trace**, **Affected Device Software Items**, **Safety Class**, and **SDD Deviation**. Complete them only as needed to pass the still-live gate; do not generate new DHF artifacts merely to satisfy them. The Accessibility section and accessibility-review workflow remain. The four named fields and submission-directed verification-trace workflows are removed only after:"
+            }
+          ]
+        }
+      ],
+      "default_branch": "main",
+      "head": "4490100c813089577802d967aa91f82b4841bfae",
+      "effective_rules": [
+        {
+          "type": "deletion",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/.github",
+          "ruleset_id": 12301648
+        },
+        {
+          "type": "non_fast_forward",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/.github",
+          "ruleset_id": 12301648
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 1,
+            "dismiss_stale_reviews_on_push": false,
+            "required_reviewers": [],
+            "require_code_owner_review": false,
+            "dismissal_restriction": {
+              "enabled": false,
+              "allowed_actors": []
+            },
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": false,
+            "require_extra_approval_for_unattributed_changes": true,
+            "allowed_merge_methods": [
+              "merge",
+              "squash",
+              "rebase"
+            ]
+          },
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/.github",
+          "ruleset_id": 12301648
+        }
+      ],
+      "classic_protection": {
+        "unavailable": "gh: Branch not protected (HTTP 404)"
+      }
+    },
+    {
+      "repository": "eiro-inc/thorne-design-tokens",
+      "archived": false,
+      "errors": [],
+      "references": [
+        {
+          "path": ".github/thorne-lanes.yml",
+          "matches": [
+            {
+              "line": 1,
+              "text": "# Device / non-device lane carve-outs for the thorne-pr-boundary-check."
+            }
+          ]
+        },
+        {
+          "path": ".github/workflows/thorne-pr-boundary-check.yml",
+          "matches": [
+            {
+              "line": 12,
+              "text": "thorne-pr-boundary-check:"
+            },
+            {
+              "line": 19,
+              "text": "- uses: eiro-inc/.github/.github/actions/thorne-pr-boundary-check@4490100c813089577802d967aa91f82b4841bfae # lane-aware + CMP \u00a710 New Dependencies gate (.github#15)"
+            }
+          ]
+        }
+      ],
+      "default_branch": "main",
+      "head": "21d16e7b2b1eabc187ef4a554988305ad927f25b",
+      "effective_rules": [],
+      "classic_protection": {
+        "url": "https://api.github.com/repos/eiro-inc/thorne-design-tokens/branches/main/protection",
+        "required_status_checks": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-design-tokens/branches/main/protection/required_status_checks",
+          "strict": false,
+          "contexts": [
+            "PR checks complete",
+            "thorne-pr-boundary-check",
+            "GitGuardian Security Checks",
+            "owner-review"
+          ],
+          "contexts_url": "https://api.github.com/repos/eiro-inc/thorne-design-tokens/branches/main/protection/required_status_checks/contexts",
+          "checks": [
+            {
+              "context": "PR checks complete",
+              "app_id": 15368
+            },
+            {
+              "context": "thorne-pr-boundary-check",
+              "app_id": 15368
+            },
+            {
+              "context": "GitGuardian Security Checks",
+              "app_id": 46505
+            },
+            {
+              "context": "owner-review",
+              "app_id": 4250994
+            }
+          ]
+        },
+        "required_pull_request_reviews": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-design-tokens/branches/main/protection/required_pull_request_reviews",
+          "dismiss_stale_reviews": true,
+          "require_code_owner_reviews": true,
+          "require_last_push_approval": false,
+          "required_approving_review_count": 1
+        },
+        "required_signatures": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-design-tokens/branches/main/protection/required_signatures",
+          "enabled": false
+        },
+        "enforce_admins": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-design-tokens/branches/main/protection/enforce_admins",
+          "enabled": true
+        },
+        "required_linear_history": {
+          "enabled": false
+        },
+        "allow_force_pushes": {
+          "enabled": false
+        },
+        "allow_deletions": {
+          "enabled": false
+        },
+        "block_creations": {
+          "enabled": false
+        },
+        "required_conversation_resolution": {
+          "enabled": false
+        },
+        "lock_branch": {
+          "enabled": false
+        },
+        "allow_fork_syncing": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "repository": "eiro-inc/eiro-security",
+      "archived": false,
+      "errors": [
+        "classic_protection: gh: Branch not protected (HTTP 404)"
+      ],
+      "references": [],
+      "default_branch": "main",
+      "head": "ab1786988702c746ecef3ee67fba5f1414208106",
+      "effective_rules": [
+        {
+          "type": "deletion",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/eiro-security",
+          "ruleset_id": 14609413
+        },
+        {
+          "type": "non_fast_forward",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/eiro-security",
+          "ruleset_id": 14609413
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 1,
+            "dismiss_stale_reviews_on_push": false,
+            "required_reviewers": [],
+            "require_code_owner_review": false,
+            "dismissal_restriction": {
+              "enabled": false,
+              "allowed_actors": []
+            },
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": false,
+            "require_extra_approval_for_unattributed_changes": true,
+            "allowed_merge_methods": [
+              "merge",
+              "squash",
+              "rebase"
+            ]
+          },
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/eiro-security",
+          "ruleset_id": 14609413
+        }
+      ],
+      "classic_protection": {
+        "unavailable": "gh: Branch not protected (HTTP 404)"
+      }
+    },
+    {
+      "repository": "eiro-inc/eiro-aws",
+      "archived": false,
+      "errors": [
+        "classic_protection: gh: Branch not protected (HTTP 404)"
+      ],
+      "references": [],
+      "default_branch": "main",
+      "head": "cd726bf72914e4fea6604e7cecb8672fb22f37bc",
+      "effective_rules": [
+        {
+          "type": "deletion",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/eiro-aws",
+          "ruleset_id": 12059393
+        },
+        {
+          "type": "non_fast_forward",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/eiro-aws",
+          "ruleset_id": 12059393
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 0,
+            "dismiss_stale_reviews_on_push": false,
+            "required_reviewers": [],
+            "require_code_owner_review": false,
+            "dismissal_restriction": {
+              "enabled": false,
+              "allowed_actors": []
+            },
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": false,
+            "require_extra_approval_for_unattributed_changes": true,
+            "allowed_merge_methods": [
+              "merge",
+              "squash",
+              "rebase"
+            ]
+          },
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/eiro-aws",
+          "ruleset_id": 12059393
+        },
+        {
+          "type": "file_path_restriction",
+          "parameters": {
+            "restricted_file_paths": [
+              ".github/workflows/**"
+            ],
+            "ignored_file_paths": []
+          },
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/eiro-aws",
+          "ruleset_id": 15833862
+        }
+      ],
+      "classic_protection": {
+        "unavailable": "gh: Branch not protected (HTTP 404)"
+      }
+    },
+    {
+      "repository": "eiro-inc/eiro-eng-tools",
+      "archived": false,
+      "errors": [],
+      "references": [],
+      "default_branch": "main",
+      "head": "7435caa15cf2f59648ceda953d2d62581f3bf51e",
+      "effective_rules": [],
+      "classic_protection": {
+        "url": "https://api.github.com/repos/eiro-inc/eiro-eng-tools/branches/main/protection",
+        "required_status_checks": {
+          "url": "https://api.github.com/repos/eiro-inc/eiro-eng-tools/branches/main/protection/required_status_checks",
+          "strict": false,
+          "contexts": [],
+          "contexts_url": "https://api.github.com/repos/eiro-inc/eiro-eng-tools/branches/main/protection/required_status_checks/contexts",
+          "checks": []
+        },
+        "required_pull_request_reviews": {
+          "url": "https://api.github.com/repos/eiro-inc/eiro-eng-tools/branches/main/protection/required_pull_request_reviews",
+          "dismiss_stale_reviews": true,
+          "require_code_owner_reviews": false,
+          "require_last_push_approval": true,
+          "required_approving_review_count": 1
+        },
+        "required_signatures": {
+          "url": "https://api.github.com/repos/eiro-inc/eiro-eng-tools/branches/main/protection/required_signatures",
+          "enabled": true
+        },
+        "enforce_admins": {
+          "url": "https://api.github.com/repos/eiro-inc/eiro-eng-tools/branches/main/protection/enforce_admins",
+          "enabled": true
+        },
+        "required_linear_history": {
+          "enabled": false
+        },
+        "allow_force_pushes": {
+          "enabled": false
+        },
+        "allow_deletions": {
+          "enabled": false
+        },
+        "block_creations": {
+          "enabled": false
+        },
+        "required_conversation_resolution": {
+          "enabled": true
+        },
+        "lock_branch": {
+          "enabled": false
+        },
+        "allow_fork_syncing": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "repository": "eiro-inc/eiro-compliance-tools",
+      "archived": false,
+      "errors": [],
+      "references": [],
+      "default_branch": "main",
+      "head": "d3112d010a9e51ce9e4a5b401d690e6e1209920d",
+      "effective_rules": [],
+      "classic_protection": {
+        "url": "https://api.github.com/repos/eiro-inc/eiro-compliance-tools/branches/main/protection",
+        "required_status_checks": {
+          "url": "https://api.github.com/repos/eiro-inc/eiro-compliance-tools/branches/main/protection/required_status_checks",
+          "strict": false,
+          "contexts": [
+            "pytest",
+            "GitGuardian Security Checks"
+          ],
+          "contexts_url": "https://api.github.com/repos/eiro-inc/eiro-compliance-tools/branches/main/protection/required_status_checks/contexts",
+          "checks": [
+            {
+              "context": "pytest",
+              "app_id": 15368
+            },
+            {
+              "context": "GitGuardian Security Checks",
+              "app_id": 46505
+            }
+          ]
+        },
+        "required_pull_request_reviews": {
+          "url": "https://api.github.com/repos/eiro-inc/eiro-compliance-tools/branches/main/protection/required_pull_request_reviews",
+          "dismiss_stale_reviews": false,
+          "require_code_owner_reviews": false,
+          "require_last_push_approval": false,
+          "required_approving_review_count": 1
+        },
+        "required_signatures": {
+          "url": "https://api.github.com/repos/eiro-inc/eiro-compliance-tools/branches/main/protection/required_signatures",
+          "enabled": true
+        },
+        "enforce_admins": {
+          "url": "https://api.github.com/repos/eiro-inc/eiro-compliance-tools/branches/main/protection/enforce_admins",
+          "enabled": false
+        },
+        "required_linear_history": {
+          "enabled": false
+        },
+        "allow_force_pushes": {
+          "enabled": false
+        },
+        "allow_deletions": {
+          "enabled": false
+        },
+        "block_creations": {
+          "enabled": false
+        },
+        "required_conversation_resolution": {
+          "enabled": false
+        },
+        "lock_branch": {
+          "enabled": false
+        },
+        "allow_fork_syncing": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "repository": "eiro-inc/eiro-aws-tooling",
+      "archived": false,
+      "errors": [],
+      "references": [],
+      "default_branch": "main",
+      "head": "51185f86f837986b8d26b52102ff0b32ee1c5065",
+      "effective_rules": [
+        {
+          "type": "deletion",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/eiro-aws-tooling",
+          "ruleset_id": 16099696
+        },
+        {
+          "type": "non_fast_forward",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/eiro-aws-tooling",
+          "ruleset_id": 16099696
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 0,
+            "dismiss_stale_reviews_on_push": false,
+            "required_reviewers": [],
+            "require_code_owner_review": false,
+            "dismissal_restriction": {
+              "enabled": false,
+              "allowed_actors": []
+            },
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": false,
+            "require_extra_approval_for_unattributed_changes": true,
+            "allowed_merge_methods": [
+              "merge",
+              "squash",
+              "rebase"
+            ]
+          },
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/eiro-aws-tooling",
+          "ruleset_id": 16099696
+        }
+      ],
+      "classic_protection": {
+        "url": "https://api.github.com/repos/eiro-inc/eiro-aws-tooling/branches/main/protection",
+        "required_status_checks": {
+          "url": "https://api.github.com/repos/eiro-inc/eiro-aws-tooling/branches/main/protection/required_status_checks",
+          "strict": false,
+          "contexts": [],
+          "contexts_url": "https://api.github.com/repos/eiro-inc/eiro-aws-tooling/branches/main/protection/required_status_checks/contexts",
+          "checks": []
+        },
+        "required_pull_request_reviews": {
+          "url": "https://api.github.com/repos/eiro-inc/eiro-aws-tooling/branches/main/protection/required_pull_request_reviews",
+          "dismiss_stale_reviews": true,
+          "require_code_owner_reviews": false,
+          "require_last_push_approval": false,
+          "required_approving_review_count": 1
+        },
+        "required_signatures": {
+          "url": "https://api.github.com/repos/eiro-inc/eiro-aws-tooling/branches/main/protection/required_signatures",
+          "enabled": true
+        },
+        "enforce_admins": {
+          "url": "https://api.github.com/repos/eiro-inc/eiro-aws-tooling/branches/main/protection/enforce_admins",
+          "enabled": true
+        },
+        "required_linear_history": {
+          "enabled": false
+        },
+        "allow_force_pushes": {
+          "enabled": false
+        },
+        "allow_deletions": {
+          "enabled": false
+        },
+        "block_creations": {
+          "enabled": false
+        },
+        "required_conversation_resolution": {
+          "enabled": true
+        },
+        "lock_branch": {
+          "enabled": false
+        },
+        "allow_fork_syncing": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "repository": "eiro-inc/eiro-website",
+      "archived": false,
+      "errors": [
+        "classic_protection: gh: Branch not protected (HTTP 404)"
+      ],
+      "references": [],
+      "default_branch": "main",
+      "head": "bf62d894bf94c8e0c0fec4ac586a4867fa633c22",
+      "effective_rules": [
+        {
+          "type": "deletion",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/eiro-website",
+          "ruleset_id": 12803688
+        },
+        {
+          "type": "non_fast_forward",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/eiro-website",
+          "ruleset_id": 12803688
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 0,
+            "dismiss_stale_reviews_on_push": false,
+            "required_reviewers": [],
+            "require_code_owner_review": false,
+            "dismissal_restriction": {
+              "enabled": false,
+              "allowed_actors": []
+            },
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": false,
+            "require_extra_approval_for_unattributed_changes": true,
+            "allowed_merge_methods": [
+              "merge",
+              "squash",
+              "rebase"
+            ]
+          },
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/eiro-website",
+          "ruleset_id": 12803688
+        }
+      ],
+      "classic_protection": {
+        "unavailable": "gh: Branch not protected (HTTP 404)"
+      }
+    },
+    {
+      "repository": "eiro-inc/eiro-data-analysis",
+      "archived": false,
+      "errors": [],
+      "references": [],
+      "default_branch": "main",
+      "head": "72be14ee5e1526b6ad9d8252694eb8c5cb1b40a3",
+      "effective_rules": [],
+      "classic_protection": {
+        "url": "https://api.github.com/repos/eiro-inc/eiro-data-analysis/branches/main/protection",
+        "required_status_checks": {
+          "url": "https://api.github.com/repos/eiro-inc/eiro-data-analysis/branches/main/protection/required_status_checks",
+          "strict": false,
+          "contexts": [],
+          "contexts_url": "https://api.github.com/repos/eiro-inc/eiro-data-analysis/branches/main/protection/required_status_checks/contexts",
+          "checks": []
+        },
+        "required_pull_request_reviews": {
+          "url": "https://api.github.com/repos/eiro-inc/eiro-data-analysis/branches/main/protection/required_pull_request_reviews",
+          "dismiss_stale_reviews": true,
+          "require_code_owner_reviews": false,
+          "require_last_push_approval": true,
+          "required_approving_review_count": 0
+        },
+        "required_signatures": {
+          "url": "https://api.github.com/repos/eiro-inc/eiro-data-analysis/branches/main/protection/required_signatures",
+          "enabled": true
+        },
+        "enforce_admins": {
+          "url": "https://api.github.com/repos/eiro-inc/eiro-data-analysis/branches/main/protection/enforce_admins",
+          "enabled": false
+        },
+        "required_linear_history": {
+          "enabled": false
+        },
+        "allow_force_pushes": {
+          "enabled": false
+        },
+        "allow_deletions": {
+          "enabled": false
+        },
+        "block_creations": {
+          "enabled": false
+        },
+        "required_conversation_resolution": {
+          "enabled": true
+        },
+        "lock_branch": {
+          "enabled": false
+        },
+        "allow_fork_syncing": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "repository": "eiro-inc/thorne-vv-tooling",
+      "archived": false,
+      "errors": [],
+      "references": [],
+      "default_branch": "main",
+      "head": "9ed2bfcebaa35721057d7c6dc1619d22e085f72b",
+      "effective_rules": [],
+      "classic_protection": {
+        "url": "https://api.github.com/repos/eiro-inc/thorne-vv-tooling/branches/main/protection",
+        "required_status_checks": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-vv-tooling/branches/main/protection/required_status_checks",
+          "strict": false,
+          "contexts": [
+            "test"
+          ],
+          "contexts_url": "https://api.github.com/repos/eiro-inc/thorne-vv-tooling/branches/main/protection/required_status_checks/contexts",
+          "checks": [
+            {
+              "context": "test",
+              "app_id": 15368
+            }
+          ]
+        },
+        "required_pull_request_reviews": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-vv-tooling/branches/main/protection/required_pull_request_reviews",
+          "dismiss_stale_reviews": true,
+          "require_code_owner_reviews": false,
+          "require_last_push_approval": true,
+          "required_approving_review_count": 1
+        },
+        "required_signatures": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-vv-tooling/branches/main/protection/required_signatures",
+          "enabled": true
+        },
+        "enforce_admins": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-vv-tooling/branches/main/protection/enforce_admins",
+          "enabled": true
+        },
+        "required_linear_history": {
+          "enabled": false
+        },
+        "allow_force_pushes": {
+          "enabled": false
+        },
+        "allow_deletions": {
+          "enabled": false
+        },
+        "block_creations": {
+          "enabled": false
+        },
+        "required_conversation_resolution": {
+          "enabled": true
+        },
+        "lock_branch": {
+          "enabled": false
+        },
+        "allow_fork_syncing": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "repository": "eiro-inc/aws-security-baseline",
+      "archived": false,
+      "errors": [
+        "classic_protection: gh: Branch not protected (HTTP 404)"
+      ],
+      "references": [],
+      "default_branch": "main",
+      "head": "de775a36783cd04a5f58103e6cb66235f7a5bb69",
+      "effective_rules": [
+        {
+          "type": "deletion",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/aws-security-baseline",
+          "ruleset_id": 13412094
+        },
+        {
+          "type": "non_fast_forward",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/aws-security-baseline",
+          "ruleset_id": 13412094
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 0,
+            "dismiss_stale_reviews_on_push": false,
+            "required_reviewers": [],
+            "require_code_owner_review": false,
+            "dismissal_restriction": {
+              "enabled": false,
+              "allowed_actors": []
+            },
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": false,
+            "require_extra_approval_for_unattributed_changes": true,
+            "allowed_merge_methods": [
+              "merge",
+              "squash",
+              "rebase"
+            ]
+          },
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/aws-security-baseline",
+          "ruleset_id": 13412094
+        }
+      ],
+      "classic_protection": {
+        "unavailable": "gh: Branch not protected (HTTP 404)"
+      }
+    },
+    {
+      "repository": "eiro-inc/Eiro-wiki",
+      "archived": false,
+      "errors": [
+        "classic_protection: gh: Branch not protected (HTTP 404)"
+      ],
+      "references": [],
+      "default_branch": "main",
+      "head": "d0850f7b0338239efc1b449551b12cfd8d1075a8",
+      "effective_rules": [
+        {
+          "type": "deletion",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/Eiro-wiki",
+          "ruleset_id": 15114842
+        },
+        {
+          "type": "non_fast_forward",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/Eiro-wiki",
+          "ruleset_id": 15114842
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 0,
+            "dismiss_stale_reviews_on_push": false,
+            "required_reviewers": [],
+            "require_code_owner_review": false,
+            "dismissal_restriction": {
+              "enabled": false,
+              "allowed_actors": []
+            },
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": false,
+            "require_extra_approval_for_unattributed_changes": true,
+            "allowed_merge_methods": [
+              "merge",
+              "squash",
+              "rebase"
+            ]
+          },
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/Eiro-wiki",
+          "ruleset_id": 15114842
+        }
+      ],
+      "classic_protection": {
+        "unavailable": "gh: Branch not protected (HTTP 404)"
+      }
+    },
+    {
+      "repository": "eiro-inc/Eiro-iOS",
+      "archived": false,
+      "errors": [
+        "classic_protection: gh: Branch not protected (HTTP 404)"
+      ],
+      "references": [],
+      "default_branch": "dev",
+      "head": "8660d159d662db0929a92823d60f92530344eeb8",
+      "effective_rules": [
+        {
+          "type": "deletion",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/Eiro-iOS",
+          "ruleset_id": 12067359
+        },
+        {
+          "type": "non_fast_forward",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/Eiro-iOS",
+          "ruleset_id": 12067359
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 0,
+            "dismiss_stale_reviews_on_push": false,
+            "required_reviewers": [],
+            "require_code_owner_review": false,
+            "dismissal_restriction": {
+              "enabled": false,
+              "allowed_actors": []
+            },
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": false,
+            "require_extra_approval_for_unattributed_changes": true,
+            "allowed_merge_methods": [
+              "merge",
+              "squash",
+              "rebase"
+            ]
+          },
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/Eiro-iOS",
+          "ruleset_id": 12067359
+        }
+      ],
+      "classic_protection": {
+        "unavailable": "gh: Branch not protected (HTTP 404)"
+      }
+    },
+    {
+      "repository": "eiro-inc/thorne-patient-web",
+      "archived": true,
+      "errors": [],
+      "references": [
+        {
+          "path": ".github/workflows/thorne-pr-boundary-check.yml",
+          "matches": [
+            {
+              "line": 12,
+              "text": "thorne-pr-boundary-check:"
+            },
+            {
+              "line": 19,
+              "text": "- uses: eiro-inc/.github/.github/actions/thorne-pr-boundary-check@d7ab73906ce97a642590a59cbafe7d378e971401 # main @ 2026-07-07"
+            }
+          ]
+        }
+      ],
+      "default_branch": "main",
+      "head": "8394379d24796d2d3cf4ce26d3030fc0c84a7fbd",
+      "effective_rules": [],
+      "classic_protection": {
+        "url": "https://api.github.com/repos/eiro-inc/thorne-patient-web/branches/main/protection",
+        "required_status_checks": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-patient-web/branches/main/protection/required_status_checks",
+          "strict": false,
+          "contexts": [
+            "thorne-pr-boundary-check",
+            "web-ci / Build & type-check",
+            "web-ci / Unit / component tests",
+            "web-ci / Lint",
+            "web-ci / Dependency scan / Dependency review",
+            "GitGuardian Security Checks"
+          ],
+          "contexts_url": "https://api.github.com/repos/eiro-inc/thorne-patient-web/branches/main/protection/required_status_checks/contexts",
+          "checks": [
+            {
+              "context": "thorne-pr-boundary-check",
+              "app_id": 15368
+            },
+            {
+              "context": "web-ci / Build & type-check",
+              "app_id": 15368
+            },
+            {
+              "context": "web-ci / Unit / component tests",
+              "app_id": 15368
+            },
+            {
+              "context": "web-ci / Lint",
+              "app_id": 15368
+            },
+            {
+              "context": "web-ci / Dependency scan / Dependency review",
+              "app_id": null
+            },
+            {
+              "context": "GitGuardian Security Checks",
+              "app_id": 46505
+            }
+          ]
+        },
+        "required_pull_request_reviews": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-patient-web/branches/main/protection/required_pull_request_reviews",
+          "dismiss_stale_reviews": true,
+          "require_code_owner_reviews": true,
+          "require_last_push_approval": true,
+          "required_approving_review_count": 1
+        },
+        "required_signatures": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-patient-web/branches/main/protection/required_signatures",
+          "enabled": true
+        },
+        "enforce_admins": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-patient-web/branches/main/protection/enforce_admins",
+          "enabled": true
+        },
+        "required_linear_history": {
+          "enabled": false
+        },
+        "allow_force_pushes": {
+          "enabled": false
+        },
+        "allow_deletions": {
+          "enabled": false
+        },
+        "block_creations": {
+          "enabled": false
+        },
+        "required_conversation_resolution": {
+          "enabled": true
+        },
+        "lock_branch": {
+          "enabled": false
+        },
+        "allow_fork_syncing": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "repository": "eiro-inc/thorne-clinician-web",
+      "archived": true,
+      "errors": [],
+      "references": [
+        {
+          "path": ".github/workflows/thorne-pr-boundary-check.yml",
+          "matches": [
+            {
+              "line": 12,
+              "text": "thorne-pr-boundary-check:"
+            },
+            {
+              "line": 19,
+              "text": "- uses: eiro-inc/.github/.github/actions/thorne-pr-boundary-check@fe4261b0af49a45da3b8cf37b3dd3bf9b124864c # v1.0.0"
+            }
+          ]
+        }
+      ],
+      "default_branch": "main",
+      "head": "f9fe348788d7278e4507e77b50e312a7e7c6cca5",
+      "effective_rules": [],
+      "classic_protection": {
+        "url": "https://api.github.com/repos/eiro-inc/thorne-clinician-web/branches/main/protection",
+        "required_status_checks": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-clinician-web/branches/main/protection/required_status_checks",
+          "strict": false,
+          "contexts": [
+            "thorne-pr-boundary-check",
+            "web-ci / Build & type-check",
+            "web-ci / Unit / component tests",
+            "web-ci / Lint",
+            "web-ci / Dependency scan / Dependency review",
+            "GitGuardian Security Checks"
+          ],
+          "contexts_url": "https://api.github.com/repos/eiro-inc/thorne-clinician-web/branches/main/protection/required_status_checks/contexts",
+          "checks": [
+            {
+              "context": "thorne-pr-boundary-check",
+              "app_id": 15368
+            },
+            {
+              "context": "web-ci / Build & type-check",
+              "app_id": 15368
+            },
+            {
+              "context": "web-ci / Unit / component tests",
+              "app_id": 15368
+            },
+            {
+              "context": "web-ci / Lint",
+              "app_id": 15368
+            },
+            {
+              "context": "web-ci / Dependency scan / Dependency review",
+              "app_id": 15368
+            },
+            {
+              "context": "GitGuardian Security Checks",
+              "app_id": 46505
+            }
+          ]
+        },
+        "required_pull_request_reviews": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-clinician-web/branches/main/protection/required_pull_request_reviews",
+          "dismiss_stale_reviews": true,
+          "require_code_owner_reviews": true,
+          "require_last_push_approval": true,
+          "required_approving_review_count": 1
+        },
+        "required_signatures": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-clinician-web/branches/main/protection/required_signatures",
+          "enabled": true
+        },
+        "enforce_admins": {
+          "url": "https://api.github.com/repos/eiro-inc/thorne-clinician-web/branches/main/protection/enforce_admins",
+          "enabled": true
+        },
+        "required_linear_history": {
+          "enabled": false
+        },
+        "allow_force_pushes": {
+          "enabled": false
+        },
+        "allow_deletions": {
+          "enabled": false
+        },
+        "block_creations": {
+          "enabled": false
+        },
+        "required_conversation_resolution": {
+          "enabled": true
+        },
+        "lock_branch": {
+          "enabled": false
+        },
+        "allow_fork_syncing": {
+          "enabled": false
+        }
+      }
+    },
+    {
+      "repository": "eiro-inc/treatment-evidence-mining",
+      "archived": false,
+      "errors": [
+        "classic_protection: gh: Branch not protected (HTTP 404)"
+      ],
+      "references": [],
+      "default_branch": "main",
+      "head": "a77a49945f46817f32eacc853cdfc9afb8833319",
+      "effective_rules": [],
+      "classic_protection": {
+        "unavailable": "gh: Branch not protected (HTTP 404)"
+      }
+    },
+    {
+      "repository": "eiro-inc/mdd-cds",
+      "archived": false,
+      "errors": [
+        "classic_protection: gh: Branch not protected (HTTP 404)"
+      ],
+      "references": [],
+      "default_branch": "main",
+      "head": "022d7f40dc497e3728140acdcddfb1ea07041a0b",
+      "effective_rules": [
+        {
+          "type": "deletion",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/mdd-cds",
+          "ruleset_id": 17764990
+        },
+        {
+          "type": "non_fast_forward",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/mdd-cds",
+          "ruleset_id": 17764990
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 0,
+            "dismiss_stale_reviews_on_push": false,
+            "required_reviewers": [],
+            "require_code_owner_review": false,
+            "dismissal_restriction": {
+              "enabled": false,
+              "allowed_actors": []
+            },
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": false,
+            "require_extra_approval_for_unattributed_changes": true,
+            "allowed_merge_methods": [
+              "merge",
+              "squash",
+              "rebase"
+            ]
+          },
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/mdd-cds",
+          "ruleset_id": 17764990
+        }
+      ],
+      "classic_protection": {
+        "unavailable": "gh: Branch not protected (HTTP 404)"
+      }
+    },
+    {
+      "repository": "eiro-inc/eiro-rule-library",
+      "archived": false,
+      "errors": [
+        "classic_protection: gh: Branch not protected (HTTP 404)"
+      ],
+      "references": [],
+      "default_branch": "main",
+      "head": "a80a7b01994171e345b15e33c4e2c17561433626",
+      "effective_rules": [
+        {
+          "type": "deletion",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/eiro-rule-library",
+          "ruleset_id": 15353952
+        },
+        {
+          "type": "non_fast_forward",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/eiro-rule-library",
+          "ruleset_id": 15353952
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 0,
+            "dismiss_stale_reviews_on_push": false,
+            "required_reviewers": [],
+            "require_code_owner_review": false,
+            "dismissal_restriction": {
+              "enabled": false,
+              "allowed_actors": []
+            },
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": false,
+            "require_extra_approval_for_unattributed_changes": true,
+            "allowed_merge_methods": [
+              "merge",
+              "squash",
+              "rebase"
+            ]
+          },
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/eiro-rule-library",
+          "ruleset_id": 15353952
+        }
+      ],
+      "classic_protection": {
+        "unavailable": "gh: Branch not protected (HTTP 404)"
+      }
+    },
+    {
+      "repository": "eiro-inc/ClaimsData",
+      "archived": false,
+      "errors": [
+        "classic_protection: gh: Branch not protected (HTTP 404)"
+      ],
+      "references": [],
+      "default_branch": "main",
+      "head": "1ea35d388be4e9021e96e6662716439c857da77e",
+      "effective_rules": [],
+      "classic_protection": {
+        "unavailable": "gh: Branch not protected (HTTP 404)"
+      }
+    },
+    {
+      "repository": "eiro-inc/network-bh-map",
+      "archived": false,
+      "errors": [
+        "classic_protection: gh: Branch not protected (HTTP 404)"
+      ],
+      "references": [],
+      "default_branch": "main",
+      "head": "35a95697b5ce7ec1e649dc8a0a3c42cbdf330634",
+      "effective_rules": [
+        {
+          "type": "deletion",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/network-bh-map",
+          "ruleset_id": 15782172
+        },
+        {
+          "type": "non_fast_forward",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/network-bh-map",
+          "ruleset_id": 15782172
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 0,
+            "dismiss_stale_reviews_on_push": false,
+            "required_reviewers": [],
+            "require_code_owner_review": false,
+            "dismissal_restriction": {
+              "enabled": false,
+              "allowed_actors": []
+            },
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": false,
+            "require_extra_approval_for_unattributed_changes": true,
+            "allowed_merge_methods": [
+              "merge",
+              "squash",
+              "rebase"
+            ]
+          },
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/network-bh-map",
+          "ruleset_id": 15782172
+        }
+      ],
+      "classic_protection": {
+        "unavailable": "gh: Branch not protected (HTTP 404)"
+      }
+    },
+    {
+      "repository": "eiro-inc/rtm-wiki",
+      "archived": false,
+      "errors": [
+        "classic_protection: gh: Branch not protected (HTTP 404)"
+      ],
+      "references": [],
+      "default_branch": "main",
+      "head": "56a6fe9eb92a0c12b0b955cd21b7a50fcaf5ae95",
+      "effective_rules": [
+        {
+          "type": "deletion",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/rtm-wiki",
+          "ruleset_id": 15062068
+        },
+        {
+          "type": "non_fast_forward",
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/rtm-wiki",
+          "ruleset_id": 15062068
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 0,
+            "dismiss_stale_reviews_on_push": false,
+            "required_reviewers": [],
+            "require_code_owner_review": false,
+            "dismissal_restriction": {
+              "enabled": false,
+              "allowed_actors": []
+            },
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": false,
+            "require_extra_approval_for_unattributed_changes": true,
+            "allowed_merge_methods": [
+              "merge",
+              "squash",
+              "rebase"
+            ]
+          },
+          "ruleset_source_type": "Repository",
+          "ruleset_source": "eiro-inc/rtm-wiki",
+          "ruleset_id": 15062068
+        }
+      ],
+      "classic_protection": {
+        "unavailable": "gh: Branch not protected (HTTP 404)"
+      }
+    },
+    {
+      "repository": "eiro-inc/MDDMDP.jl",
+      "archived": false,
+      "errors": [
+        "classic_protection: gh: Branch not protected (HTTP 404)"
+      ],
+      "references": [],
+      "default_branch": "main",
+      "head": "f69394f85e772d0814fbcfd1b17f8e9ba8036199",
+      "effective_rules": [],
+      "classic_protection": {
+        "unavailable": "gh: Branch not protected (HTTP 404)"
+      }
+    },
+    {
+      "repository": "eiro-inc/mdd-qlearning",
+      "archived": false,
+      "errors": [
+        "classic_protection: gh: Branch not protected (HTTP 404)"
+      ],
+      "references": [],
+      "default_branch": "main",
+      "head": "8797a1ac473a74e9dd4b71f662be1c6f71bcc34e",
+      "effective_rules": [],
+      "classic_protection": {
+        "unavailable": "gh: Branch not protected (HTTP 404)"
+      }
+    },
+    {
+      "repository": "eiro-inc/Eiro-Clinical",
+      "archived": false,
+      "errors": [
+        "No default branch"
+      ],
+      "references": [],
+      "default_branch": ""
+    },
+    {
+      "repository": "eiro-inc/CONFIDENCEBOUNDS.jl",
+      "archived": false,
+      "errors": [
+        "classic_protection: gh: Branch not protected (HTTP 404)"
+      ],
+      "references": [],
+      "default_branch": "main",
+      "head": "9405d0b59bdb9cafb3e365bcf39120062f7a4b75",
+      "effective_rules": [],
+      "classic_protection": {
+        "unavailable": "gh: Branch not protected (HTTP 404)"
+      }
+    }
+  ]
+}

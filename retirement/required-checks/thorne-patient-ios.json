@@ -1,0 +1,44 @@
+{
+  "repository": "eiro-inc/thorne-patient-ios",
+  "captured_at": "2026-09-09T18:00:38.709794+00:00",
+  "method": "PATCH",
+  "endpoint": "repos/eiro-inc/thorne-patient-ios/branches/main/protection/required_status_checks",
+  "before": {
+    "strict": false,
+    "checks": [
+      {
+        "context": "thorne-pr-boundary-check",
+        "app_id": 15368
+      },
+      {
+        "context": "GitGuardian Security Checks",
+        "app_id": 46505
+      },
+      {
+        "context": "PR Check Complete",
+        "app_id": 15368
+      },
+      {
+        "context": "owner-review",
+        "app_id": 4250994
+      }
+    ]
+  },
+  "after": {
+    "strict": false,
+    "checks": [
+      {
+        "context": "GitGuardian Security Checks",
+        "app_id": 46505
+      },
+      {
+        "context": "PR Check Complete",
+        "app_id": 15368
+      },
+      {
+        "context": "owner-review",
+        "app_id": 4250994
+      }
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "repository": "eiro-inc/thorne-product",
+  "captured_at": "2026-09-09T18:00:38.709794+00:00",
+  "method": "PATCH",
+  "endpoint": "repos/eiro-inc/thorne-product/branches/main/protection/required_status_checks",
+  "before": {
+    "strict": false,
+    "checks": [
+      {
+        "context": "thorne-pr-boundary-check",
+        "app_id": 15368
+      },
+      {
+        "context": "gates",
+        "app_id": 15368
+      }
+    ]
+  },
+  "after": {
+    "strict": false,
+    "checks": [
+      {
+        "context": "gates",
+        "app_id": 15368
+      }
+    ]
+  }
+}

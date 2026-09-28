@@ -1,3 +1,5 @@
+> **Thorne PR workflow:** use Summary, Testing, and optional Reviewer notes. Link the issue in Summary when useful. No device-lane, DHF-trace, safety-class, boundary/accessibility checkbox, or Policy-revision declaration is required. Existing owner review and targeted qualified review for consequential changes remain; see [Thorne Engineering Cutover](THORNE_ENGINEERING_CUTOVER.md). Legacy submission-process material below does not reinstate the retired PR form.
+
 # Software Development Lifecycle Guide
 
 > **Official Document**: This guide summarizes [SOP-004: Software Development Lifecycle](https://docs.google.com/document/d/1w88x2JGCiB1yKPQktt_v_Q4KYuN7OI6ND7CXAL_cH9E/edit?usp=share_link) maintained in the Eiro QMS on Google Drive. 
