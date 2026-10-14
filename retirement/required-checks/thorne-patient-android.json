@@ -1,0 +1,76 @@
+{
+  "repository": "eiro-inc/thorne-patient-android",
+  "captured_at": "2026-09-09T18:00:38.709794+00:00",
+  "method": "PATCH",
+  "endpoint": "repos/eiro-inc/thorne-patient-android/branches/main/protection/required_status_checks",
+  "before": {
+    "strict": false,
+    "checks": [
+      {
+        "context": "thorne-pr-boundary-check",
+        "app_id": 15368
+      },
+      {
+        "context": "Audit",
+        "app_id": 15368
+      },
+      {
+        "context": "Test",
+        "app_id": 15368
+      },
+      {
+        "context": "Build",
+        "app_id": 15368
+      },
+      {
+        "context": "Lint",
+        "app_id": 15368
+      },
+      {
+        "context": "GitGuardian Security Checks",
+        "app_id": 46505
+      },
+      {
+        "context": "dependency-review / Dependency review",
+        "app_id": 15368
+      },
+      {
+        "context": "owner-review",
+        "app_id": 4250994
+      }
+    ]
+  },
+  "after": {
+    "strict": false,
+    "checks": [
+      {
+        "context": "Audit",
+        "app_id": 15368
+      },
+      {
+        "context": "Test",
+        "app_id": 15368
+      },
+      {
+        "context": "Build",
+        "app_id": 15368
+      },
+      {
+        "context": "Lint",
+        "app_id": 15368
+      },
+      {
+        "context": "GitGuardian Security Checks",
+        "app_id": 46505
+      },
+      {
+        "context": "dependency-review / Dependency review",
+        "app_id": 15368
+      },
+      {
+        "context": "owner-review",
+        "app_id": 4250994
+      }
+    ]
+  }
+}

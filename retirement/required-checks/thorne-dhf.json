@@ -1,0 +1,31 @@
+{
+  "repository": "eiro-inc/thorne-dhf",
+  "captured_at": "2026-09-09T18:00:38.709794+00:00",
+  "method": "PUT",
+  "endpoint": "repos/eiro-inc/thorne-dhf/rulesets/16365542",
+  "note": "Patch only this required_status_checks rule in a fresh full ruleset payload; retain every other rule, condition, bypass actor, enforcement and name. This file is a rule diff, not a complete PUT body.",
+  "before": {
+    "strict_required_status_checks_policy": false,
+    "do_not_enforce_on_create": false,
+    "required_status_checks": [
+      {
+        "context": "stamp / stamp",
+        "integration_id": 15368
+      },
+      {
+        "context": "thorne-pr-boundary-check",
+        "integration_id": 15368
+      }
+    ]
+  },
+  "after": {
+    "strict_required_status_checks_policy": false,
+    "do_not_enforce_on_create": false,
+    "required_status_checks": [
+      {
+        "context": "stamp / stamp",
+        "integration_id": 15368
+      }
+    ]
+  }
+}

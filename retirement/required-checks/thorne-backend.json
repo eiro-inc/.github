@@ -1,0 +1,60 @@
+{
+  "repository": "eiro-inc/thorne-backend",
+  "captured_at": "2026-09-09T18:00:38.709794+00:00",
+  "method": "PATCH",
+  "endpoint": "repos/eiro-inc/thorne-backend/branches/main/protection/required_status_checks",
+  "before": {
+    "strict": false,
+    "checks": [
+      {
+        "context": "thorne-pr-boundary-check",
+        "app_id": 15368
+      },
+      {
+        "context": "regression",
+        "app_id": 15368
+      },
+      {
+        "context": "GitGuardian Security Checks",
+        "app_id": 46505
+      },
+      {
+        "context": "pr-checks-complete",
+        "app_id": 15368
+      },
+      {
+        "context": "dependency-review / Dependency review",
+        "app_id": 15368
+      },
+      {
+        "context": "owner-review",
+        "app_id": 4250994
+      }
+    ]
+  },
+  "after": {
+    "strict": false,
+    "checks": [
+      {
+        "context": "regression",
+        "app_id": 15368
+      },
+      {
+        "context": "GitGuardian Security Checks",
+        "app_id": 46505
+      },
+      {
+        "context": "pr-checks-complete",
+        "app_id": 15368
+      },
+      {
+        "context": "dependency-review / Dependency review",
+        "app_id": 15368
+      },
+      {
+        "context": "owner-review",
+        "app_id": 4250994
+      }
+    ]
+  }
+}
