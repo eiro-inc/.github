@@ -103,17 +103,27 @@ The workflow enforces:
   resolved` is not left checked.
 - Thorne-related PRs confirm the required boundary checklist items.
 
-### Thorne PR Verification-Traceability Check
+### Thorne PR Verification-Traceability Check (retired)
 
-`.github/actions/thorne-pr-verification-trace` runs the read-only `vvtrace`
-engine against a device source repository's pull request, enforcing the
-machine-checkable trace conventions against the controlled DHF (thorne-dhf#113
-AC3): `@verifies SRS-NN-MM` tags and `implements: SDD-NN` declarations must cite
-DHF ids that exist and be well-formed. It emits the read-only evidence and
-module manifests as a build artifact and fails CI on any finding; it never
-writes the DHF or the TRM.
+`.github/actions/thorne-pr-verification-trace` is retired
+([eiro-qms#848](https://github.com/eiro-inc/eiro-qms/issues/848)); its callers
+were removed from all five Thorne repositories under
+[#43](https://github.com/eiro-inc/.github/issues/43). Do not deploy new callers.
+The implementation and release tags remain readable as historical evidence for
+old pins. Thorne source code no longer carries legacy `@verifies SRS-NN-MM` tags
+or `implements: SDD-NN` declarations ([REC-116 §12](https://github.com/eiro-inc/eiro-qms/blob/main/records/management-review/REC-116-thorne-commercial-cutover.md)).
+Where a requirement link helps, code and tests may cite a live ID from
+`thorne-product/docs/requirements.md` (e.g. `CHK-07`); that citation carries no
+harvest, no traceability-matrix administration and no merge gate.
 
-To use it in a repository, add this workflow. The `ref:` on the checkout is
+When it ran, the action ran the read-only `vvtrace` engine against a device
+source repository's pull request, enforcing the machine-checkable trace
+conventions against the controlled DHF (thorne-dhf#113 AC3): `@verifies` tags
+and `implements:` declarations had to cite DHF ids that existed and be
+well-formed. It emitted the read-only evidence and module manifests as a build
+artifact and failed CI on any finding; it never wrote the DHF or the TRM.
+
+The legacy caller workflow is kept below for reference only. The `ref:` on the checkout is
 required: the action records the commit it actually scanned, read from the tree,
 and fails if that is not the event's head commit — so a default checkout, which
 gives the synthetic merge ref, is rejected rather than silently producing
@@ -144,8 +154,8 @@ The action installs the pinned engine (`vvtrace-ref`, defaulting to the commit
 tagged `v0.1.0`) and needs `token` with read access to `eiro-inc/thorne-dhf`
 (and, while private, `eiro-inc/thorne-vv-tooling`). It fetches the DHF into
 `$RUNNER_TEMP`, outside the workspace, so the DHF is never part of the scanned
-tree. After adding the workflow, require the
-`thorne-pr-verification-trace` status check before merge. See the action's
+tree. Legacy callers required the `thorne-pr-verification-trace` status check
+before merge. See the action's
 [README](.github/actions/thorne-pr-verification-trace/README.md) for inputs.
 
 ## Issue Templates

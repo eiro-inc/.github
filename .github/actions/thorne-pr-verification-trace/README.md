@@ -1,5 +1,13 @@
 # Thorne PR Verification-Traceability Check
 
+> **Retired.** This action is retired
+> ([eiro-qms#848](https://github.com/eiro-inc/eiro-qms/issues/848)) and has no
+> callers ([#43](https://github.com/eiro-inc/.github/issues/43)). Do not deploy
+> new callers. Thorne source code no longer carries the `@verifies` tags or
+> `implements:` declarations described below
+> ([REC-116 §12](https://github.com/eiro-inc/eiro-qms/blob/main/records/management-review/REC-116-thorne-commercial-cutover.md)). The
+> implementation and release tags are kept as historical evidence.
+
 Composite action that runs the read-only `vvtrace` engine against a device
 source repository's pull request, enforcing the machine-checkable trace
 conventions against the controlled DHF (ADR-0008; thorne-dhf#113 **AC3** — the
